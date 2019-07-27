@@ -2,17 +2,17 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@android:id/background">
         <bitmap
-            android:src="@drawable/star_def"
-             />
+            android:src="@drawable/star_action"
+            android:tint="?attr/colorControlNormal" />
     </item>
     <item android:id="@android:id/secondaryProgress">
         <bitmap
             android:src="@drawable/star_action"
-             />
+            android:tint="?attr/colorControlActivated" />
     </item>
     <item android:id="@android:id/progress">
         <bitmap
             android:src="@drawable/star_action"
-            />
+            android:tint="?attr/actionBarStyle" />
     </item>
 </layer-list>

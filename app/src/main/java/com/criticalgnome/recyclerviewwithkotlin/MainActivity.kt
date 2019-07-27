@@ -11,22 +11,18 @@ class MainActivity : AppCompatActivity()  {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val items = listOf(
-                MainItem("Достоинства", "Пушкин"),
+                MainItem("Соответсвие фото", "Пушкин"),
                 MainItem("Недостатки", "Лермонтов"),
-                MainItem("Недостатки", "Лермонтов"),
-                MainItem("Недостатки", "Лермонтов"),
-                MainItem("Недостатки", "Лермонтов"),
-                MainItem("Недостатки", "Лермонтов"),
-                MainItem("Недостатки", "Лермонтов"),
-                MainItem("Недостатки", "Лермонтов"),
-                MainItem("Недостатки", "Лермонтов"),
-                MainItem("Недостатки", "Лермонтов")
+                MainItem("Расположение", "Лермонтов"),
+                MainItem("Чистота", "Лермонтов"),
+                MainItem("Обслуживание", "Лермонтов"),
+                MainItem("Удобство номера", "Лермонтов"),
+                MainItem("Цена - качество или в две строчки", "Лермонтов")
         )
 
         val myAdapter = MainAdapter(items)
 
         myRecycler.adapter = myAdapter
-        myRecycler.isNestedScrollingEnabled()
     }
 
 }

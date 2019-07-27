@@ -19,7 +19,7 @@ class MainAdapter(var items: List<MainItem>) : RecyclerView.Adapter<MainAdapter.
 
     override fun onBindViewHolder(holder: MainHolder, position: Int) {
         holder.firstName.text = items[position].firstName
-        holder.lastName.numStars = 5
+       // holder.lastName.numStars = 5
         holder.lastName.setOnRatingBarChangeListener { ratingBar, rating, fromUser ->
             println("test")
         }
