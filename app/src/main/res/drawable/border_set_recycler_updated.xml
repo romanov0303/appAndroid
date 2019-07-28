@@ -2,10 +2,10 @@
 <layer-list
     xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:bottom="50dp"
+        android:bottom="100dp"
         android:left="100dp"
         android:right="7dp"
-        android:top="400dp">
+        android:top="900dp">
         <bitmap
             android:src="@drawable/star_def">
         </bitmap>
