@@ -69,17 +69,26 @@ class MainActivity : AppCompatActivity()  {
         builder.setItems(cases) { dialog, which ->
             when (which) {
                 0 -> {
-                    takePhoto()
+                    var res = checkPersmission(android.Manifest.permission.CAMERA)
+                    if (res) {
+                        takePhoto()
+                    } else {
+                        requestPermission(android.Manifest.permission.CAMERA, 1000)
+                    }
+
                 }
                 1 -> {
-                    checkPersmission()
-                    requestPermission()
-                    pickImageFromGallery()
+                    var res = checkPersmission(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    if (res) {
+                        pickImageFromGallery()
+                    } else {
+                        requestPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE, 1001)
+                    }
+
                 }
             }
         }
 
-// create and show the alert dialog
         val dialog = builder.create()
         dialog.show()
     }
@@ -96,23 +105,33 @@ class MainActivity : AppCompatActivity()  {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        val pickedImage = data?.getData()
-        val filePath = arrayOf(MediaStore.Images.Media.DATA)
-        val cursor = contentResolver.query(pickedImage, filePath, null, null, null)
-        cursor!!.moveToFirst()
-        val imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]))
-        val options = BitmapFactory.Options()
-        options.inPreferredConfig = Bitmap.Config.ARGB_8888
-        val bitmap = BitmapFactory.decodeFile(imagePath, options)
-        var images = arrayListOf<String>()
-        images.set(0, imagePath)
-        println(images)
+        when(requestCode) {
+            0 -> {
+                var image = data?.getExtras()?.get("data")
+                println(image)
+            }
+            1 -> {
+                println(requestCode)
+                val pickedImage = data?.getData()
+                val filePath = arrayOf(MediaStore.Images.Media.DATA)
+                val cursor = contentResolver.query(pickedImage, filePath, null, null, null)
+                cursor!!.moveToFirst()
+                val imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]))
+                val options = BitmapFactory.Options()
+                options.inPreferredConfig = Bitmap.Config.ARGB_8888
+                val bitmap = BitmapFactory.decodeFile(imagePath, options)
+                // var images = arrayListOf<String>()
+                /*images.set(0, imagePath)
+                println(images)*/
 
-        imageLink.setImageBitmap(bitmap)
-        // At the end remember to close the cursor or you will end with the RuntimeException!
-        cursor.close()
-       // println(pickedImage)
+                imageLink.setImageBitmap(bitmap)
+                // At the end remember to close the cursor or you will end with the RuntimeException!
+                cursor.close()
+                // println(pickedImage)
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+
     }
 
 
@@ -123,15 +142,14 @@ class MainActivity : AppCompatActivity()  {
         }
     }
 
-    private fun checkPersmission(): Boolean {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Permission is not granted
-            requestPermissions(arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
-                    1000)
-            return true
-        }
-        return false
+    private fun checkPersmission(permission: String): Boolean {
+        return (ContextCompat.checkSelfPermission(this, permission) ==
+                PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this,
+                permission) == PackageManager.PERMISSION_GRANTED)
+    }
+
+    private fun requestPermission(permission: String, code: Int) {
+        ActivityCompat.requestPermissions(this, arrayOf(permission), code)
     }
 
     /**
@@ -142,13 +160,22 @@ class MainActivity : AppCompatActivity()  {
         when (requestCode) {
             1000 -> {
                 // If request is cancelled, the result arrays are empty.
-                println("ZBS!!!!")
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    println("YEssy")
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
+                    takePhoto()
                 } else {
-                    println("NONONON")
+                    Toast.makeText(this, "Denied!", Toast.LENGTH_SHORT).show()
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return
+            }
+            1001 -> {
+                // If request is cancelled, the result arrays are empty.
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    pickImageFromGallery()
+                } else {
+                    Toast.makeText(this, "Denied", Toast.LENGTH_SHORT).show()
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                 }
@@ -163,48 +190,5 @@ class MainActivity : AppCompatActivity()  {
         }
     }
 
-    private fun requestPermission() {
-        if (ContextCompat.checkSelfPermission(this,
-                        android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                            android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                println(222)
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-            } else {
-                println(111)
-                // No explanation needed, we can request the permission.
-                ActivityCompat.requestPermissions(this,
-                        arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
-                        1000)
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-            }
-        } else {
-            println(444)
-            // Permission has already been granted
-        }
-    }
-
-    private fun takePicture() {
-
-        val intent: Intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        /*val file: File = createFile()
-
-        val uri: Uri = FileProvider.getUriForFile(
-                this,
-                "com.example.android.fileprovider",
-                file
-        )
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri)*/
-        startActivityForResult(intent, 101)
-    }
 
 }

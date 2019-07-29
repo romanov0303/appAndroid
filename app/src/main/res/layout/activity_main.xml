@@ -26,7 +26,6 @@
                 android:layout_height="16dp"
                 android:layout_marginStart="20.56dp"
                 android:layout_marginTop="20.5dp"
-                android:src="@drawable/ic_imported_layers_12"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
