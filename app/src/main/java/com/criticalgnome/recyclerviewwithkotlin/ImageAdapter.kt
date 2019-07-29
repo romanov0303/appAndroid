@@ -1,13 +1,16 @@
 package com.criticalgnome.recyclerviewwithkotlin
 
+import android.media.Image
+import android.net.Uri
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
 
-class ImageAdapter(var items: List<ImageItems>,var activity: MainActivity) : RecyclerView.Adapter<ImageAdapter.ImageHolder>() {
+class ImageAdapter(var items: MutableList<Uri>,var activity: MainActivity) : RecyclerView.Adapter<ImageAdapter.ImageHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) : ImageHolder {
         return ImageHolder(LayoutInflater.from(parent.context).inflate(R.layout.image_recycler, parent, false))
@@ -18,12 +21,11 @@ class ImageAdapter(var items: List<ImageItems>,var activity: MainActivity) : Rec
     }
 
     override fun onBindViewHolder(p0: ImageHolder, p1: Int) {
-
+        var el: Uri = items[p1]
+        p0.image.setImageURI(el)
     }
 
     inner class ImageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        public val firstName = itemView.findViewById<TextView>(R.id.firstName)
-        public val ratingVal =  itemView.findViewById<RatingBar>(R.id.ratingVal)
-        public val avgRating =  itemView.findViewById<TextView>(R.id.avgRating)
+        public val image = itemView.findViewById<ImageView>(R.id.imageObject)
     }
 }

@@ -1,8 +1,5 @@
 package com.criticalgnome.recyclerviewwithkotlin
 
-import android.content.Context
-import android.content.DialogInterface
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
@@ -23,15 +20,19 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import android.R.attr.data
-import android.content.SharedPreferences
+import android.content.*
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
+import android.widget.Adapter
+import java.io.FileOutputStream
+import java.io.OutputStream
+import java.net.URI
 import java.util.jar.Manifest
 
 
 class MainActivity : AppCompatActivity()  {
 
-    public var elementsImg = arrayOf<Bitmap>()
+    public var elementsImg = mutableListOf<Uri>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,9 +56,11 @@ class MainActivity : AppCompatActivity()  {
         }
         val myAdapter = MainAdapter(items, this)
 
-        //val imgAdapter = ImageAdapter(elementsImg,this)
+        val imgAdapter = ImageAdapter(elementsImg,this)
 
         myRecycler.adapter = myAdapter
+
+        recycleImg.adapter = imgAdapter
     }
 
     private fun showDialog() {
@@ -65,7 +68,7 @@ class MainActivity : AppCompatActivity()  {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Выберите действие")
 
-        val cases = arrayOf("Камера", "Галлерея")
+        val cases = arrayOf("Камера", "Галлерея", "Чтение права")
         builder.setItems(cases) { dialog, which ->
             when (which) {
                 0 -> {
@@ -84,7 +87,13 @@ class MainActivity : AppCompatActivity()  {
                     } else {
                         requestPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE, 1001)
                     }
+                }
+                2 -> {
+                    var res = checkPersmission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    println(res)
+                    requestPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, 1002)
 
+                   // println(res)
                 }
             }
         }
@@ -104,14 +113,21 @@ class MainActivity : AppCompatActivity()  {
         startActivityForResult(intent, REQUEST_SELECT_IMAGE_IN_ALBUM) // GIVE AN INTEGER VALUE FOR IMAGE_PICK_CODE LIKE 1000
     }
 
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when(requestCode) {
             0 -> {
-                var image = data?.getExtras()?.get("data")
-                println(image)
+                val imageBitmap = data!!.extras.get("data") as Bitmap
+                val uri = saveImageFromCamera(imageBitmap)
+                elementsImg.add(elementsImg.lastIndex + 1, uri)
+
+                val imgAdapter = ImageAdapter(elementsImg,this)
+
+                recycleImg.adapter = imgAdapter
+
+               // imageLink.setImageURI(uri)
             }
             1 -> {
-                println(requestCode)
                 val pickedImage = data?.getData()
                 val filePath = arrayOf(MediaStore.Images.Media.DATA)
                 val cursor = contentResolver.query(pickedImage, filePath, null, null, null)
@@ -124,19 +140,28 @@ class MainActivity : AppCompatActivity()  {
                 /*images.set(0, imagePath)
                 println(images)*/
 
-                imageLink.setImageBitmap(bitmap)
-                // At the end remember to close the cursor or you will end with the RuntimeException!
+               // imageLink.setImageBitmap(bitmap)
                 cursor.close()
-                // println(pickedImage)
             }
         }
         super.onActivityResult(requestCode, resultCode, data)
 
     }
 
+    private fun saveImageFromCamera(bitmap: Bitmap): Uri {
+        val wrapper = ContextWrapper(this)
+        var file = wrapper.getDir("images", Context.MODE_PRIVATE)
+        file = File(file, "${UUID.randomUUID()}.jpg")
+        val stream: OutputStream = FileOutputStream(file)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+        stream.flush()
+        stream.close()
+        return Uri.parse(file.absolutePath)
+    }
 
     private fun takePhoto() {
         val intent1 = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+
         if (intent1.resolveActivity(packageManager) != null) {
             startActivityForResult(intent1, REQUEST_TAKE_PHOTO)
         }
@@ -180,6 +205,13 @@ class MainActivity : AppCompatActivity()  {
                     // functionality that depends on this permission.
                 }
                 return
+            }
+            1002 -> {
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    println("111111")
+                } else {
+                    println("888888")
+                }
             }
 
             // Add other 'when' lines to check for other
