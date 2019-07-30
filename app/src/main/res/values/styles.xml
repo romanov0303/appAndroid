@@ -11,4 +11,9 @@
         <item name="android:progressDrawable">@drawable/custom_ratingbar</item>
         <item name="android:minHeight">24dp</item>
     </style>
+
+    <style name="progressBarLoading" parent="@android:style/Widget.ProgressBar">
+        <item name="android:indeterminateDrawable">@drawable/ic_loader</item>
+    </style>
+
 </resources>

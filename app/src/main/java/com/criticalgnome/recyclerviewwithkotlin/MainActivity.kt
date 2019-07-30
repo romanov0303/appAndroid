@@ -12,8 +12,6 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
 import android.view.Window
-import android.widget.TextView
-import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 import java.io.IOException
@@ -23,14 +21,23 @@ import android.R.attr.data
 import android.content.*
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
-import android.widget.Adapter
+import android.view.View
+import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.AnimationSet
+import android.view.animation.AnimationUtils
+import android.widget.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import okhttp3.*
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.net.URI
 import java.util.jar.Manifest
 
 
-class MainActivity : AppCompatActivity()  {
+class MainActivity : AppCompatActivity()   {
 
     public var elementsImg = mutableListOf<Uri>()
 
@@ -40,8 +47,25 @@ class MainActivity : AppCompatActivity()  {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        //setContentView(R.layout.activity_main)
+        setContentView(R.layout.progressbar)
 
+        getDataFromUrl("https://api.myjson.com/bins/grhsp")
+        //setData()
+       // setContentView(R.layout.activity_main)
+        //setLoader()
+
+
+    }
+
+
+    private fun setData() {
+        val resultPermision = checkPersmission(android.Manifest.permission.INTERNET)
+        if (!resultPermision) {
+            requestPermission(android.Manifest.permission.INTERNET, 1003)
+        } else {
+            getDataFromUrl("https://api.myjson.com/bins/grhsp")
+        }
 
         val items = listOf(
                 MainItem("Соответсвие фото"),
@@ -64,6 +88,18 @@ class MainActivity : AppCompatActivity()  {
         myRecycler.adapter = myAdapter
 
         recycleImg.adapter = imgAdapter
+    }
+    private fun setLoader() {
+        val progressBar = ProgressBar(this)
+
+       /* progressBar.setIndeterminate(false)
+        progressBar.setIndeterminateDrawable(ContextCompat.getDrawable(this, R.drawable.spinner))
+
+        progressBar.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        constraintMain.addView(progressBar)*/
+
+        //constraintMain.setVisibility(View.GONE)
+        llProgressBar.setVisibility(View.VISIBLE)
     }
 
     private fun showDialog() {
@@ -127,8 +163,6 @@ class MainActivity : AppCompatActivity()  {
                 var imgAdapter = ImageAdapter(elementsImg,this)
                 println(elementsImg)
                 recycleImg.adapter = imgAdapter
-
-               // imageLink.setImageURI(uri)
             }
             1 -> {
                 val pickedImage = data?.getData()
@@ -139,8 +173,6 @@ class MainActivity : AppCompatActivity()  {
                 elementsImg.add(elementsImg.lastIndex + 1, pickedImage!!)
                 var imgAdapter = ImageAdapter(elementsImg,this)
                 recycleImg.adapter = imgAdapter
-
-               // imageLink.setImageBitmap(bitmap)
                 cursor.close()
             }
         }
@@ -152,11 +184,10 @@ class MainActivity : AppCompatActivity()  {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
         val storageDir: File = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return File.createTempFile(
-                "JPEG_${timeStamp}_", /* prefix */
-                ".jpg", /* suffix */
-                storageDir /* directory */
+                "JPEG_${timeStamp}_",
+                ".jpg",
+                storageDir
         ).apply {
-            // Save a file: path for use with ACTION_VIEW intents
             currentPhotoPath = absolutePath
         }
     }
@@ -174,9 +205,9 @@ class MainActivity : AppCompatActivity()  {
     }*/
 
     private fun takePhoto() {
-        val intent1 = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        val intentCamera = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 
-        if (intent1.resolveActivity(packageManager) != null) {
+        if (intentCamera.resolveActivity(packageManager) != null) {
             val photoFile: File? = try {
                 createImageFile()
             } catch (ex: IOException) {null}
@@ -187,10 +218,10 @@ class MainActivity : AppCompatActivity()  {
                         "com.criticalgnome.recyclerviewwithkotlin.provider",
                         it
                 )
-                intent1.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, photoURI)
+                intentCamera.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, photoURI)
                 elementsImg.add(elementsImg.lastIndex + 1, photoURI)
             }
-            startActivityForResult(intent1, REQUEST_TAKE_PHOTO)
+            startActivityForResult(intentCamera, REQUEST_TAKE_PHOTO)
         }
     }
 
@@ -240,6 +271,13 @@ class MainActivity : AppCompatActivity()  {
                     println("888888")
                 }
             }
+            1003 -> {
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    getDataFromUrl("https://api.myjson.com/bins/grhsp")
+                } else {
+                    println("888888")
+                }
+            }
 
             // Add other 'when' lines to check for other
             // permissions this app might request.
@@ -249,5 +287,28 @@ class MainActivity : AppCompatActivity()  {
         }
     }
 
+    private fun getDataFromUrl(string: String) {
+        var client: OkHttpClient = OkHttpClient()
+        println(client)
+        val request = Request.Builder()
+                .url("https://api.myjson.com/bins/grhsp")
+                .build()
+        println(request)
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println(e.message)
+            }
+            override fun onResponse(call: Call, response: Response) {
+                /*println("UUUSUKA")
+                runOnUiThread {
+                    //setContentView(R.layout.activity_main)
+                    //
+                }*/
+                setData()
+                println(response.body()?.string())
 
+            }
+        })
+        println(client)
+    }
 }
