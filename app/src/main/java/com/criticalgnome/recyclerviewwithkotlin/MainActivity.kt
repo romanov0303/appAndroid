@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity()  {
 
     public var elementsImg = mutableListOf<Uri>()
 
-    private lateinit var imgAdapter: ImageAdapter
+    private lateinit var pickedImage: ImageAdapter
 
     public lateinit var currentPhotoPath: String
 
@@ -49,8 +49,7 @@ class MainActivity : AppCompatActivity()  {
                 MainItem("Расположение"),
                 MainItem("Чистота"),
                 MainItem("Обслуживание"),
-                MainItem("Удобство номера"),
-                MainItem("Цена - качество или в две строчки")
+                MainItem("Удобство номера")
         )
         val avgRating = findViewById<TextView>(R.id.avgRating)
         val buttonAddPhoto = findViewById<TextView>(R.id.addPhotoBtn)
@@ -125,7 +124,7 @@ class MainActivity : AppCompatActivity()  {
                 //val imageBitmap = data!!.extras.get("data") as Bitmap
                 //saveImageFromCamera(imageBitmap)
                 //elementsImg.add(elementsImg.lastIndex + 1, uri)
-                val imgAdapter = ImageAdapter(elementsImg,this)
+                var imgAdapter = ImageAdapter(elementsImg,this)
                 println(elementsImg)
                 recycleImg.adapter = imgAdapter
 
@@ -137,13 +136,9 @@ class MainActivity : AppCompatActivity()  {
                 val cursor = contentResolver.query(pickedImage, filePath, null, null, null)
                 cursor!!.moveToFirst()
                 val imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]))
-                //elementsImg.add(elementsImg.lastIndex + 1, imagePath)
-                val options = BitmapFactory.Options()
-                options.inPreferredConfig = Bitmap.Config.ARGB_8888
-                val bitmap = BitmapFactory.decodeFile(imagePath, options)
-                // var images = arrayListOf<String>()
-                /*images.set(0, imagePath)
-                println(images)*/
+                elementsImg.add(elementsImg.lastIndex + 1, pickedImage!!)
+                var imgAdapter = ImageAdapter(elementsImg,this)
+                recycleImg.adapter = imgAdapter
 
                // imageLink.setImageBitmap(bitmap)
                 cursor.close()

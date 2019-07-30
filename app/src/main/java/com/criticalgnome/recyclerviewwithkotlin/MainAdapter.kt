@@ -22,6 +22,9 @@ class MainAdapter(var items: List<MainItem>, var main: MainActivity) : RecyclerV
         return MainHolder(LayoutInflater.from(parent.context).inflate(R.layout.main_item, parent, false))
     }
 
+    data class testClass(var index: Int, var float: Float)
+
+
     override fun getItemCount() = items.size
 
     override fun onBindViewHolder(holder: MainHolder, position: Int) {

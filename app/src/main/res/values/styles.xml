@@ -9,7 +9,6 @@
     </style>
     <style name="CustomRatingBar" parent="@android:style/Widget.RatingBar">
         <item name="android:progressDrawable">@drawable/custom_ratingbar</item>
-        <item name="android:minHeight">22dp</item>
-        <item name="android:maxHeight">22dp</item>
+        <item name="android:minHeight">24dp</item>
     </style>
 </resources>
