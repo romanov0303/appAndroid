@@ -34,6 +34,10 @@ class MainActivity : AppCompatActivity()  {
 
     public var elementsImg = mutableListOf<Uri>()
 
+    private lateinit var imgAdapter: ImageAdapter
+
+    public lateinit var currentPhotoPath: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -115,14 +119,14 @@ class MainActivity : AppCompatActivity()  {
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
         when(requestCode) {
             0 -> {
-                val imageBitmap = data!!.extras.get("data") as Bitmap
-                val uri = saveImageFromCamera(imageBitmap)
-                elementsImg.add(elementsImg.lastIndex + 1, uri)
-
+                //val imageBitmap = data!!.extras.get("data") as Bitmap
+                //saveImageFromCamera(imageBitmap)
+                //elementsImg.add(elementsImg.lastIndex + 1, uri)
                 val imgAdapter = ImageAdapter(elementsImg,this)
-
+                println(elementsImg)
                 recycleImg.adapter = imgAdapter
 
                // imageLink.setImageURI(uri)
@@ -133,6 +137,7 @@ class MainActivity : AppCompatActivity()  {
                 val cursor = contentResolver.query(pickedImage, filePath, null, null, null)
                 cursor!!.moveToFirst()
                 val imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]))
+                //elementsImg.add(elementsImg.lastIndex + 1, imagePath)
                 val options = BitmapFactory.Options()
                 options.inPreferredConfig = Bitmap.Config.ARGB_8888
                 val bitmap = BitmapFactory.decodeFile(imagePath, options)
@@ -144,25 +149,52 @@ class MainActivity : AppCompatActivity()  {
                 cursor.close()
             }
         }
-        super.onActivityResult(requestCode, resultCode, data)
+
 
     }
 
-    private fun saveImageFromCamera(bitmap: Bitmap): Uri {
-        val wrapper = ContextWrapper(this)
+    private fun createImageFile(): File {
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        val storageDir: File = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(
+                "JPEG_${timeStamp}_", /* prefix */
+                ".jpg", /* suffix */
+                storageDir /* directory */
+        ).apply {
+            // Save a file: path for use with ACTION_VIEW intents
+            currentPhotoPath = absolutePath
+        }
+    }
+
+    /*private fun saveImageFromCamera(bitmap: Bitmap): Any {
+
+        *//*val wrapper = ContextWrapper(this)
         var file = wrapper.getDir("images", Context.MODE_PRIVATE)
         file = File(file, "${UUID.randomUUID()}.jpg")
         val stream: OutputStream = FileOutputStream(file)
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
         stream.flush()
-        stream.close()
-        return Uri.parse(file.absolutePath)
-    }
+        stream.close()*//*
+        //return Uri.parse(file.absolutePath)
+    }*/
 
     private fun takePhoto() {
         val intent1 = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 
         if (intent1.resolveActivity(packageManager) != null) {
+            val photoFile: File? = try {
+                createImageFile()
+            } catch (ex: IOException) {null}
+            // Continue only if the File was successfully created
+            photoFile?.also {
+                val photoURI: Uri = FileProvider.getUriForFile(
+                        this,
+                        "com.criticalgnome.recyclerviewwithkotlin.provider",
+                        it
+                )
+                intent1.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, photoURI)
+                elementsImg.add(elementsImg.lastIndex + 1, photoURI)
+            }
             startActivityForResult(intent1, REQUEST_TAKE_PHOTO)
         }
     }
