@@ -36,6 +36,7 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.net.URI
 import java.util.jar.Manifest
+import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity()   {
@@ -44,10 +45,13 @@ class MainActivity : AppCompatActivity()   {
 
     private lateinit var pickedImage: ImageAdapter
 
+    public var listData = mutableListOf<MainItem>()
+
     public lateinit var currentPhotoPath: String
 
     companion object {
-        var BaseUrl = "https://api.myjson.com/bins/grhsp/"
+        //var BaseUrl = "https://api.myjson.com/bins/grhsp/"
+        var BaseUrl = "https://api.myjson.com/bins/b2w4t/"
         var AppId = "2e65127e909e178d0af311a81f39948c"
         var lat = "35"
         var lon = "139"
@@ -55,26 +59,34 @@ class MainActivity : AppCompatActivity()   {
         private val REQUEST_SELECT_IMAGE_IN_ALBUM = 1
     }
 
-    private fun retrofitTest() {
+    private fun retrofitGetDataFromUrl() {
         val retrofit = Retrofit.Builder()
                 .baseUrl(BaseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
+        val listCollector = mutableListOf<Collector>()
 
         val service = retrofit.create(SutochnoService::class.java)
         val call = service.getData()
         call.enqueue(object : Callback<SutochnoResponse> {
             override fun onResponse(call: Call<SutochnoResponse>, response: Response<SutochnoResponse>) {
                 if (response.code() == 200) {
-                    println(response.body())
                     val data = response.body()!!
+                    var superNewData = mutableListOf<Collector>()
                     for ((index, value) in data.data!!.review!!.properties!!.withIndex()) {
+                        var dataNewList = mutableListOf<Collector>()
+                        var groupName = value.groupName
+                        var properties = mutableListOf<Ratings>()
                         for ((i,v) in value.items!!.withIndex()) {
-                            println("$i ===== ${v.key}")
+                            listData.add(MainItem(v.title, v.value, value.groupName))
+                            properties.add(Ratings(v.title, v.value))
                         }
+                        superNewData.add(Collector(groupName, properties))
                     }
-                    //println(data.data.review.properties)
-                    //layoutProgress.visibility = View.GONE
+                    println(superNewData)
+                    layoutProgress.visibility = View.GONE
+
+                    fillDataRecycler(listData)
                 }
             }
             override fun onFailure(call: Call<SutochnoResponse>, t: Throwable) {
@@ -90,58 +102,30 @@ class MainActivity : AppCompatActivity()   {
         if (!resultPermision) {
             requestPermission(android.Manifest.permission.INTERNET, 1003)
         } else {
-            retrofitTest()
-            //getDataFromUrl("https://api.myjson.com/bins/grhsp")
+            retrofitGetDataFromUrl()
         }
-
-
-
-        // getDataFromUrl("https://api.myjson.com/bins/grhsp"))
-        //setContentView(R.layout.progressbar)
-        //setData()
-
-
-
     }
 
     private fun getDataFromUrl(string: String) {
 
     }
 
-    private fun setData() {
-        val items = listOf(
-                MainItem("Соответсвие фото"),
-                MainItem("Недостатки"),
-                MainItem("Расположение"),
-                MainItem("Чистота"),
-                MainItem("Обслуживание"),
-                MainItem("Удобство номера")
-        )
+    private fun fillDataRecycler(list: MutableList<MainItem>) {
         val avgRating = findViewById<TextView>(R.id.avgRating)
         val buttonAddPhoto = findViewById<TextView>(R.id.addPhotoBtn)
 
         buttonAddPhoto.setOnClickListener {
             showDialog()
         }
-        val myAdapter = MainAdapter(items, this)
+        val myAdapter = MainAdapter(list, this)
 
         val imgAdapter = ImageAdapter(elementsImg,this)
 
         myRecycler.adapter = myAdapter
 
         recycleImg.adapter = imgAdapter
-    }
 
-    private fun setLoader() {
-        val progressBar = ProgressBar(this)
-
-        progressBar.setIndeterminateDrawable(ContextCompat.getDrawable(this, R.drawable.spinner))
-
-        //progressBar.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-
-        //constraintProgress.addView(progressBar)
-        //constraintMain.visibility = View.GONE
-
+        mainView.visibility = View.VISIBLE
     }
 
     private fun showDialog() {
@@ -193,9 +177,6 @@ class MainActivity : AppCompatActivity()   {
         super.onActivityResult(requestCode, resultCode, data)
         when(requestCode) {
             0 -> {
-                //val imageBitmap = data!!.extras.get("data") as Bitmap
-                //saveImageFromCamera(imageBitmap)
-                //elementsImg.add(elementsImg.lastIndex + 1, uri)
                 var imgAdapter = ImageAdapter(elementsImg,this)
                 println(elementsImg)
                 recycleImg.adapter = imgAdapter
@@ -227,18 +208,6 @@ class MainActivity : AppCompatActivity()   {
             currentPhotoPath = absolutePath
         }
     }
-
-    /*private fun saveImageFromCamera(bitmap: Bitmap): Any {
-
-        *//*val wrapper = ContextWrapper(this)
-        var file = wrapper.getDir("images", Context.MODE_PRIVATE)
-        file = File(file, "${UUID.randomUUID()}.jpg")
-        val stream: OutputStream = FileOutputStream(file)
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-        stream.flush()
-        stream.close()*//*
-        //return Uri.parse(file.absolutePath)
-    }*/
 
     private fun takePhoto() {
         val intentCamera = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
@@ -278,25 +247,18 @@ class MainActivity : AppCompatActivity()   {
                                             permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             1000 -> {
-                // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     takePhoto()
                 } else {
                     Toast.makeText(this, "Denied!", Toast.LENGTH_SHORT).show()
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
                 }
                 return
             }
             1001 -> {
-                // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     pickImageFromGallery()
                 } else {
                     Toast.makeText(this, "Denied", Toast.LENGTH_SHORT).show()
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
                 }
                 return
             }
@@ -314,9 +276,6 @@ class MainActivity : AppCompatActivity()   {
                     println("888888")
                 }
             }
-
-            // Add other 'when' lines to check for other
-            // permissions this app might request.
             else -> {
                 // Ignore all other requests.
             }

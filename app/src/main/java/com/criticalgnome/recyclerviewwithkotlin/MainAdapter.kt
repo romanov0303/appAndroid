@@ -28,18 +28,22 @@ class MainAdapter(var items: List<MainItem>, var main: MainActivity) : RecyclerV
     override fun getItemCount() = items.size
 
     override fun onBindViewHolder(holder: MainHolder, position: Int) {
-        if (holder.ratingVal.rating < 1) {
+        if (items[position].value.isEmpty()) {
+            items[position].value = "0"
+        }
+        if (holder.ratingVal.rating < 1 && items[position].value.isEmpty()) {
             datasList[position] = 0f
         } else {
-            datasList[position] = holder.ratingVal.rating
+            datasList[position] = round(items[position].value.toFloat())
         }
+
         holder.firstName.text = items[position].firstName
-        println(datasList)
+
+        holder.ratingVal.rating = round(items[position].value.toFloat())
         holder.ratingVal.setOnRatingBarChangeListener { ratingBar, rating, fromUser ->
             var stars = round(rating)
             ratingBar.setRating(stars)
             datasList[position] = stars
-            println(datasList)
             var elementBlockRect = main.findViewById<ImageView>(R.id.imageView)
             val res = datasList.all {
                 it.value != 0f
@@ -47,9 +51,7 @@ class MainAdapter(var items: List<MainItem>, var main: MainActivity) : RecyclerV
             if (res) {
                 val count = items.size
                 var sums: Float = 0f
-                println(sums)
                 datasList.forEach {
-                    println(it.value)
                     sums = sums + it.value
                    var avgRating: Float = sums / items.size
                     val rounded = avgRating.toBigDecimal().setScale(1, RoundingMode.UP).toDouble()

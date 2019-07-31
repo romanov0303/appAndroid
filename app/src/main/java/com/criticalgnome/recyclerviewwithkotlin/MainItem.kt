@@ -1,5 +1,7 @@
 package com.criticalgnome.recyclerviewwithkotlin
 
 data class MainItem(
-        val firstName: String
+        var firstName: String,
+        var value: String,
+        var groupName: String
 )
