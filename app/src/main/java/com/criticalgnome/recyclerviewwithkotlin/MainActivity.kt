@@ -27,7 +27,11 @@ import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.AnimationUtils
 import android.widget.*
-import okhttp3.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.net.URI
@@ -42,43 +46,66 @@ class MainActivity : AppCompatActivity()   {
 
     public lateinit var currentPhotoPath: String
 
+    companion object {
+        var BaseUrl = "https://api.myjson.com/bins/grhsp/"
+        var AppId = "2e65127e909e178d0af311a81f39948c"
+        var lat = "35"
+        var lon = "139"
+        private val REQUEST_TAKE_PHOTO = 0
+        private val REQUEST_SELECT_IMAGE_IN_ALBUM = 1
+    }
+
+    private fun retrofitTest() {
+        val retrofit = Retrofit.Builder()
+                .baseUrl(BaseUrl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+
+        val service = retrofit.create(SutochnoService::class.java)
+        val call = service.getData()
+        call.enqueue(object : Callback<SutochnoResponse> {
+            override fun onResponse(call: Call<SutochnoResponse>, response: Response<SutochnoResponse>) {
+                if (response.code() == 200) {
+                    println(response.body())
+                    val data = response.body()!!
+                    for ((index, value) in data.data!!.review!!.properties!!.withIndex()) {
+                        for ((i,v) in value.items!!.withIndex()) {
+                            println("$i ===== ${v.key}")
+                        }
+                    }
+                    //println(data.data.review.properties)
+                    //layoutProgress.visibility = View.GONE
+                }
+            }
+            override fun onFailure(call: Call<SutochnoResponse>, t: Throwable) {
+                println("Retrofit error")
+            }
+        })
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-       // getDataFromUrl("https://api.myjson.com/bins/grhsp"))
-        //setContentView(R.layout.progressbar)
-        //setData()
         val resultPermision = checkPersmission(android.Manifest.permission.INTERNET)
         if (!resultPermision) {
             requestPermission(android.Manifest.permission.INTERNET, 1003)
         } else {
-            getDataFromUrl("https://api.myjson.com/bins/grhsp")
+            retrofitTest()
+            //getDataFromUrl("https://api.myjson.com/bins/grhsp")
         }
+
+
+
+        // getDataFromUrl("https://api.myjson.com/bins/grhsp"))
+        //setContentView(R.layout.progressbar)
+        //setData()
+
 
 
     }
 
     private fun getDataFromUrl(string: String) {
-        var client: OkHttpClient = OkHttpClient()
-        println(client)
-        val request = Request.Builder()
-                .url(string)
-                .build()
-        println(request)
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                println(e.message)
-            }
-            override fun onResponse(call: Call, response: Response) {
-                println(response.body()?.string())
-                runOnUiThread {
-                    mainView.visibility = View.VISIBLE
-                    layoutProgress.visibility = View.GONE
-                    setData()
-                }
 
-            }
-        })
     }
 
     private fun setData() {
@@ -154,10 +181,6 @@ class MainActivity : AppCompatActivity()   {
         dialog.show()
     }
 
-    companion object {
-        private val REQUEST_TAKE_PHOTO = 0
-        private val REQUEST_SELECT_IMAGE_IN_ALBUM = 1
-    }
 
     private fun pickImageFromGallery() {
         val intent = Intent(Intent.ACTION_PICK)
