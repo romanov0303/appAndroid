@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
     <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/mainView"
-        android:visibility="gone"
+        android:visibility="visible"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:animateLayoutChanges="true"
@@ -33,27 +33,27 @@
                 app:layout_constraintTop_toTopOf="parent">
 
                 <ImageView
-                    android:layout_width="15.82dp"
-                    android:layout_height="16dp"
-                    android:layout_marginStart="20.56dp"
-                    android:layout_marginTop="20.5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:src="@drawable/ic_close"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
                     android:id="@+id/mainTitle"
-                    android:layout_width="181dp"
+                    android:layout_width="200dp"
                     android:layout_height="21dp"
-                    android:layout_marginStart="72dp"
-                    android:layout_marginTop="18dp"
+                    android:layout_marginStart="32dp"
+                    android:layout_marginTop="16dp"
                     android:layout_marginEnd="107dp"
                     android:background="#FFFFFF"
-                    android:fontFamily="Roboto"
+                    android:fontFamily="sans-serif-medium"
                     android:gravity="top"
                     android:text="Отзыв о проживании"
                     android:textColor="#000000"
                     android:textSize="18sp"
-                    android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -172,9 +172,8 @@
                     android:layout_height="21dp"
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="30dp"
-                    android:fontFamily="Roboto"
                     android:text="Достоинства"
-                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
                     android:textColor="#000000"
                     android:textSize="18sp"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -210,8 +209,7 @@
                     android:layout_height="21dp"
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="30dp"
-                    android:fontFamily="Roboto"
-                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
                     android:text="Недостатки"
                     android:textColor="#000000"
                     android:gravity="left|center_vertical"
@@ -245,11 +243,11 @@
                     android:layout_height="21dp"
                     android:layout_marginTop="30dp"
                     android:layout_marginStart="16dp"
-                    android:fontFamily="Roboto"
+                    android:fontFamily="sans-serif-medium"
                     android:text="Фотографии"
                     android:textColor="#000000"
                     android:textSize="18sp"
-                    android:textStyle="bold" />
+                   />
             </LinearLayout>
             <LinearLayout
                 android:id="@+id/photos"
@@ -325,6 +323,7 @@
     <include
         android:id="@+id/layoutProgress"
         android:animateLayoutChanges="true"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         layout="@layout/progressbar" />
