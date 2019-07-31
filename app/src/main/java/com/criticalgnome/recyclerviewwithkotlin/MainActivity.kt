@@ -27,9 +27,6 @@ import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.AnimationUtils
 import android.widget.*
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import okhttp3.*
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -47,26 +44,23 @@ class MainActivity : AppCompatActivity()   {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(R.layout.activity_main)
-        setContentView(R.layout.progressbar)
+        setContentView(R.layout.activity_main)
+        //setContentView(R.layout.progressbar)
+        setData()
+        val resultPermision = checkPersmission(android.Manifest.permission.INTERNET)
+        if (!resultPermision) {
+            requestPermission(android.Manifest.permission.INTERNET, 1003)
+        } else {
 
-        getDataFromUrl("https://api.myjson.com/bins/grhsp")
-        //setData()
-       // setContentView(R.layout.activity_main)
-        //setLoader()
+        }
+
 
 
     }
 
 
     private fun setData() {
-        val resultPermision = checkPersmission(android.Manifest.permission.INTERNET)
-        if (!resultPermision) {
-            requestPermission(android.Manifest.permission.INTERNET, 1003)
-        } else {
-            getDataFromUrl("https://api.myjson.com/bins/grhsp")
-        }
-
+        setContentView(R.layout.activity_main)
         val items = listOf(
                 MainItem("Соответсвие фото"),
                 MainItem("Недостатки"),
@@ -89,18 +83,18 @@ class MainActivity : AppCompatActivity()   {
 
         recycleImg.adapter = imgAdapter
     }
-    private fun setLoader() {
+    /*private fun setLoader() {
         val progressBar = ProgressBar(this)
 
-       /* progressBar.setIndeterminate(false)
+       *//* progressBar.setIndeterminate(false)
         progressBar.setIndeterminateDrawable(ContextCompat.getDrawable(this, R.drawable.spinner))
 
         progressBar.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        constraintMain.addView(progressBar)*/
+        constraintMain.addView(progressBar)*//*
 
         //constraintMain.setVisibility(View.GONE)
         llProgressBar.setVisibility(View.VISIBLE)
-    }
+    }*/
 
     private fun showDialog() {
 
@@ -271,13 +265,6 @@ class MainActivity : AppCompatActivity()   {
                     println("888888")
                 }
             }
-            1003 -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    getDataFromUrl("https://api.myjson.com/bins/grhsp")
-                } else {
-                    println("888888")
-                }
-            }
 
             // Add other 'when' lines to check for other
             // permissions this app might request.
@@ -287,28 +274,4 @@ class MainActivity : AppCompatActivity()   {
         }
     }
 
-    private fun getDataFromUrl(string: String) {
-        var client: OkHttpClient = OkHttpClient()
-        println(client)
-        val request = Request.Builder()
-                .url("https://api.myjson.com/bins/grhsp")
-                .build()
-        println(request)
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                println(e.message)
-            }
-            override fun onResponse(call: Call, response: Response) {
-                /*println("UUUSUKA")
-                runOnUiThread {
-                    //setContentView(R.layout.activity_main)
-                    //
-                }*/
-                setData()
-                println(response.body()?.string())
-
-            }
-        })
-        println(client)
-    }
 }
