@@ -13,11 +13,7 @@
     </style>
 
     <style name="progressBarLoading" parent="@android:style/Widget.ProgressBar">
-        <item name="android:indeterminateDrawable">@drawable/ic_loader</item>
-    </style>
-
-    <style name="SplashTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="android:windowBackground">@drawable/background_splash</item>
+        <item name="android:indeterminateDrawable">@drawable/spinner</item>
     </style>
 
 </resources>

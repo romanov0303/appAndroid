@@ -45,22 +45,43 @@ class MainActivity : AppCompatActivity()   {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+       // getDataFromUrl("https://api.myjson.com/bins/grhsp"))
         //setContentView(R.layout.progressbar)
-        setData()
+        //setData()
         val resultPermision = checkPersmission(android.Manifest.permission.INTERNET)
         if (!resultPermision) {
             requestPermission(android.Manifest.permission.INTERNET, 1003)
         } else {
-
+            getDataFromUrl("https://api.myjson.com/bins/grhsp")
         }
-
 
 
     }
 
+    private fun getDataFromUrl(string: String) {
+        var client: OkHttpClient = OkHttpClient()
+        println(client)
+        val request = Request.Builder()
+                .url(string)
+                .build()
+        println(request)
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println(e.message)
+            }
+            override fun onResponse(call: Call, response: Response) {
+                println(response.body()?.string())
+                runOnUiThread {
+                    mainView.visibility = View.VISIBLE
+                    layoutProgress.visibility = View.GONE
+                    setData()
+                }
+
+            }
+        })
+    }
 
     private fun setData() {
-        setContentView(R.layout.activity_main)
         val items = listOf(
                 MainItem("Соответсвие фото"),
                 MainItem("Недостатки"),
@@ -83,18 +104,18 @@ class MainActivity : AppCompatActivity()   {
 
         recycleImg.adapter = imgAdapter
     }
-    /*private fun setLoader() {
+
+    private fun setLoader() {
         val progressBar = ProgressBar(this)
 
-       *//* progressBar.setIndeterminate(false)
         progressBar.setIndeterminateDrawable(ContextCompat.getDrawable(this, R.drawable.spinner))
 
-        progressBar.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        constraintMain.addView(progressBar)*//*
+        //progressBar.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
-        //constraintMain.setVisibility(View.GONE)
-        llProgressBar.setVisibility(View.VISIBLE)
-    }*/
+        //constraintProgress.addView(progressBar)
+        //constraintMain.visibility = View.GONE
+
+    }
 
     private fun showDialog() {
 
@@ -125,8 +146,6 @@ class MainActivity : AppCompatActivity()   {
                     var res = checkPersmission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     println(res)
                     requestPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, 1002)
-
-                   // println(res)
                 }
             }
         }
@@ -261,6 +280,13 @@ class MainActivity : AppCompatActivity()   {
             1002 -> {
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     println("111111")
+                } else {
+                    println("888888")
+                }
+            }
+            1003 -> {
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    getDataFromUrl("https://api.myjson.com/bins/grhsp")
                 } else {
                     println("888888")
                 }
