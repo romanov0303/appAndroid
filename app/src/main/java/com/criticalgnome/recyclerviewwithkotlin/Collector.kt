@@ -2,7 +2,7 @@ package com.criticalgnome.recyclerviewwithkotlin
 
 data class Collector(
         val groupName: String,
-        val items: MutableList<Ratings>
+        val items: MutableMap<String, String>
 )
 
 data class Ratings(

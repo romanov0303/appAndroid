@@ -62,6 +62,9 @@ class MainActivity : AppCompatActivity()   {
         var BaseUrl = "https://api.myjson.com/bins/b2w4t/"
         private val REQUEST_TAKE_PHOTO = 0
         private val REQUEST_SELECT_IMAGE_IN_ALBUM = 1
+        private val CAMERA_PERMISSION = 1000
+        private val READ_PERMISSION = 1001
+        private val INTERNER_PERMISSION = 1003
     }
 
     private fun retrofitGetDataFromUrl() {
@@ -81,10 +84,11 @@ class MainActivity : AppCompatActivity()   {
                     for ((index, value) in data.data!!.review!!.properties!!.withIndex()) {
                         var dataNewList = mutableListOf<Collector>()
                         var groupName = value.groupName
-                        var properties = mutableListOf<Ratings>()
+                        //var properties = mutableListOf<Ratings>()
+                        var properties = mutableMapOf<String, String>()
                         for ((i,v) in value.items!!.withIndex()) {
-                            //listData.add(MainItem(v.title, v.value))
-                            properties.add(Ratings(v.title, v.value))
+                            properties.put(v.title, v.value)
+                            //properties.add(Ratings(v.title, v.value))
                         }
                         superNewData.add(Collector(groupName, properties))
                     }
@@ -115,6 +119,9 @@ class MainActivity : AppCompatActivity()   {
 
     }
 
+    /*
+    Заполнить шаблоны данными
+     */
     private fun fillDataRecycler(list: MutableList<Collector>) {
         val listProperties = mutableListOf<MainItem>()
 
@@ -126,15 +133,11 @@ class MainActivity : AppCompatActivity()   {
             }
         }
 
-        val avgRating = findViewById<TextView>(R.id.avgRating)
         val buttonAddPhoto = findViewById<TextView>(R.id.addPhotoBtn)
 
         buttonAddPhoto.setOnClickListener {
             showDialog()
         }
-
-
-
         val myAdapter = MainAdapter(listProperties, this)
 
         val imgAdapter = ImageAdapter(elementsImg,this)
@@ -146,12 +149,15 @@ class MainActivity : AppCompatActivity()   {
         mainView.visibility = View.VISIBLE
     }
 
+    /*
+    Показать диалог с выбором действия
+     */
     private fun showDialog() {
 
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Выберите действие")
 
-        val cases = arrayOf("Камера", "Галлерея", "Чтение права")
+        val cases = arrayOf("Камера", "Галлерея"/*, "Чтение права"*/)
         builder.setItems(cases) { dialog, which ->
             when (which) {
                 0 -> {
@@ -159,7 +165,7 @@ class MainActivity : AppCompatActivity()   {
                     if (res) {
                         takePhoto()
                     } else {
-                        requestPermission(android.Manifest.permission.CAMERA, 1000)
+                        requestPermission(android.Manifest.permission.CAMERA, CAMERA_PERMISSION)
                     }
 
                 }
@@ -168,7 +174,7 @@ class MainActivity : AppCompatActivity()   {
                     if (res) {
                         pickImageFromGallery()
                     } else {
-                        requestPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE, 1001)
+                        requestPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE, READ_PERMISSION)
                     }
                 }
                 2 -> {
@@ -183,17 +189,24 @@ class MainActivity : AppCompatActivity()   {
         dialog.show()
     }
 
-
+    /*
+    Взять изображение из галереи
+     */
     private fun pickImageFromGallery() {
         val intent = Intent(Intent.ACTION_PICK)
         intent.type = "image/*"
         startActivityForResult(intent, REQUEST_SELECT_IMAGE_IN_ALBUM) // GIVE AN INTEGER VALUE FOR IMAGE_PICK_CODE LIKE 1000
     }
 
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         var activityRequestClass = ActivityResultsClass()
         activityRequestClass.activityResults(requestCode, resultCode, data, this)
     }
+
+    /*
+    Создать контейнер для фотографии
+     */
 
     private fun createImageFile(): File {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
@@ -207,6 +220,9 @@ class MainActivity : AppCompatActivity()   {
         }
     }
 
+    /*
+    Сфотографировать
+     */
     private fun takePhoto() {
         val intentCamera = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 
