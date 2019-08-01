@@ -18,6 +18,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import android.R.attr.data
+import android.app.Activity
 import android.content.*
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
@@ -46,6 +47,8 @@ class MainActivity : AppCompatActivity()   {
     private lateinit var pickedImage: ImageAdapter
 
     public var listData = mutableListOf<MainItem>()
+
+    public lateinit var photoURIPublic: Uri
 
     public lateinit var currentPhotoPath: String
 
@@ -78,15 +81,14 @@ class MainActivity : AppCompatActivity()   {
                         var groupName = value.groupName
                         var properties = mutableListOf<Ratings>()
                         for ((i,v) in value.items!!.withIndex()) {
-                            listData.add(MainItem(v.title, v.value, value.groupName))
+                            //listData.add(MainItem(v.title, v.value))
                             properties.add(Ratings(v.title, v.value))
                         }
                         superNewData.add(Collector(groupName, properties))
                     }
-                    println(superNewData)
                     layoutProgress.visibility = View.GONE
 
-                    fillDataRecycler(listData)
+                    fillDataRecycler(superNewData)
                 }
             }
             override fun onFailure(call: Call<SutochnoResponse>, t: Throwable) {
@@ -110,14 +112,27 @@ class MainActivity : AppCompatActivity()   {
 
     }
 
-    private fun fillDataRecycler(list: MutableList<MainItem>) {
+    private fun fillDataRecycler(list: MutableList<Collector>) {
+        val listProperties = mutableListOf<MainItem>()
+
+        for (i in list) {
+            if (i.groupName == "review_ratings_order") {
+                for (property in i.items) {
+                    listProperties.add(MainItem(property.key, property.value))
+                }
+            }
+        }
+
         val avgRating = findViewById<TextView>(R.id.avgRating)
         val buttonAddPhoto = findViewById<TextView>(R.id.addPhotoBtn)
 
         buttonAddPhoto.setOnClickListener {
             showDialog()
         }
-        val myAdapter = MainAdapter(list, this)
+
+
+
+        val myAdapter = MainAdapter(listProperties, this)
 
         val imgAdapter = ImageAdapter(elementsImg,this)
 
@@ -177,20 +192,29 @@ class MainActivity : AppCompatActivity()   {
         super.onActivityResult(requestCode, resultCode, data)
         when(requestCode) {
             0 -> {
-                var imgAdapter = ImageAdapter(elementsImg,this)
-                println(elementsImg)
-                recycleImg.adapter = imgAdapter
+                println(resultCode)
+                if (resultCode == Activity.RESULT_OK) {
+                    elementsImg.add(elementsImg.lastIndex + 1, photoURIPublic)
+                    var datas = data?.getExtras()
+                    println(datas)
+                    var imgAdapter = ImageAdapter(elementsImg,this)
+                    println(elementsImg)
+                    recycleImg.adapter = imgAdapter
+                }
             }
             1 -> {
-                val pickedImage = data?.getData()
-                val filePath = arrayOf(MediaStore.Images.Media.DATA)
-                val cursor = contentResolver.query(pickedImage, filePath, null, null, null)
-                cursor!!.moveToFirst()
-                val imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]))
-                elementsImg.add(elementsImg.lastIndex + 1, pickedImage!!)
-                var imgAdapter = ImageAdapter(elementsImg,this)
-                recycleImg.adapter = imgAdapter
-                cursor.close()
+                println(resultCode)
+                if (resultCode == Activity.RESULT_OK) {
+                    val pickedImage = data?.getData()
+                    val filePath = arrayOf(MediaStore.Images.Media.DATA)
+                    val cursor = contentResolver.query(pickedImage, filePath, null, null, null)
+                    cursor!!.moveToFirst()
+                    val imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]))
+                    elementsImg.add(elementsImg.lastIndex + 1, pickedImage!!)
+                    var imgAdapter = ImageAdapter(elementsImg,this)
+                    recycleImg.adapter = imgAdapter
+                    cursor.close()
+                }
             }
         }
 
@@ -224,7 +248,7 @@ class MainActivity : AppCompatActivity()   {
                         it
                 )
                 intentCamera.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, photoURI)
-                elementsImg.add(elementsImg.lastIndex + 1, photoURI)
+                photoURIPublic = photoURI
             }
             startActivityForResult(intentCamera, REQUEST_TAKE_PHOTO)
         }

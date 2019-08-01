@@ -8,6 +8,7 @@
     <ProgressBar
         android:layout_width="50dp"
         android:layout_height="50dp"
+        style="@style/progressBarLoading"
         android:layout_gravity="center"
         />
 </FrameLayout>

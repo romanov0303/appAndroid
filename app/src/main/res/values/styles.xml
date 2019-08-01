@@ -13,7 +13,7 @@
     </style>
 
     <style name="progressBarLoading" parent="@android:style/Widget.ProgressBar">
-        <item name="android:indeterminateDrawable">@drawable/spinner</item>
+        <item name="android:indeterminateDrawable">@drawable/progress</item>
     </style>
 
 </resources>
