@@ -285,7 +285,7 @@ class MainActivity : AppCompatActivity()   {
             }
             1003 -> {
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    getDataFromUrl("https://api.myjson.com/bins/grhsp")
+                    getDataFromUrl(BaseUrl)
                 } else {
                     println("888888")
                 }
