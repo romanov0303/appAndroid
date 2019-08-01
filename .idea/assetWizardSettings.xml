@@ -35,7 +35,7 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
-                                                <entry key="paddingPercent" value="20" />
+                                                <entry key="paddingPercent" value="5" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -57,8 +57,8 @@
                                   <option name="values">
                                     <map>
                                       <entry key="assetType" value="IMAGE" />
-                                      <entry key="imageAsset" value="$USER_HOME$/Downloads/star copy 4.svg" />
-                                      <entry key="outputName" value="ic_star_default" />
+                                      <entry key="imageAsset" value="C:\Users\Admin\Downloads\star copy 4.svg" />
+                                      <entry key="outputName" value="ic_star_default_test" />
                                       <entry key="theme" value="CUSTOM" />
                                       <entry key="themeColor" value="f4f4f4" />
                                     </map>
@@ -99,7 +99,7 @@
                                   <option name="values">
                                     <map>
                                       <entry key="backgroundAssetType" value="COLOR" />
-                                      <entry key="foregroundImage" value="$USER_HOME$/Downloads/star copy 4 (1).svg" />
+                                      <entry key="foregroundImage" value="C:\star copy 3.svg" />
                                     </map>
                                   </option>
                                 </PersistentState>

@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import android.R.attr.data
 import android.app.Activity
+import android.app.Instrumentation
 import android.content.*
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
@@ -28,6 +29,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.AnimationUtils
 import android.widget.*
+import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -35,7 +37,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.FileOutputStream
 import java.io.OutputStream
+import java.net.SocketTimeoutException
 import java.net.URI
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.jar.Manifest
 import kotlin.collections.ArrayList
 
@@ -55,9 +60,6 @@ class MainActivity : AppCompatActivity()   {
     companion object {
         //var BaseUrl = "https://api.myjson.com/bins/grhsp/"
         var BaseUrl = "https://api.myjson.com/bins/b2w4t/"
-        var AppId = "2e65127e909e178d0af311a81f39948c"
-        var lat = "35"
-        var lon = "139"
         private val REQUEST_TAKE_PHOTO = 0
         private val REQUEST_SELECT_IMAGE_IN_ALBUM = 1
     }
@@ -92,7 +94,7 @@ class MainActivity : AppCompatActivity()   {
                 }
             }
             override fun onFailure(call: Call<SutochnoResponse>, t: Throwable) {
-                println("Retrofit error")
+
             }
         })
     }
@@ -100,6 +102,7 @@ class MainActivity : AppCompatActivity()   {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         val resultPermision = checkPersmission(android.Manifest.permission.INTERNET)
         if (!resultPermision) {
             requestPermission(android.Manifest.permission.INTERNET, 1003)
@@ -187,38 +190,9 @@ class MainActivity : AppCompatActivity()   {
         startActivityForResult(intent, REQUEST_SELECT_IMAGE_IN_ALBUM) // GIVE AN INTEGER VALUE FOR IMAGE_PICK_CODE LIKE 1000
     }
 
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when(requestCode) {
-            0 -> {
-                println(resultCode)
-                if (resultCode == Activity.RESULT_OK) {
-                    elementsImg.add(elementsImg.lastIndex + 1, photoURIPublic)
-                    var datas = data?.getExtras()
-                    println(datas)
-                    var imgAdapter = ImageAdapter(elementsImg,this)
-                    println(elementsImg)
-                    recycleImg.adapter = imgAdapter
-                }
-            }
-            1 -> {
-                println(resultCode)
-                if (resultCode == Activity.RESULT_OK) {
-                    val pickedImage = data?.getData()
-                    val filePath = arrayOf(MediaStore.Images.Media.DATA)
-                    val cursor = contentResolver.query(pickedImage, filePath, null, null, null)
-                    cursor!!.moveToFirst()
-                    val imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]))
-                    elementsImg.add(elementsImg.lastIndex + 1, pickedImage!!)
-                    var imgAdapter = ImageAdapter(elementsImg,this)
-                    recycleImg.adapter = imgAdapter
-                    cursor.close()
-                }
-            }
-        }
-
-
+        var activityRequestClass = ActivityResultsClass()
+        activityRequestClass.activityResults(requestCode, resultCode, data, this)
     }
 
     private fun createImageFile(): File {
@@ -305,5 +279,4 @@ class MainActivity : AppCompatActivity()   {
             }
         }
     }
-
 }

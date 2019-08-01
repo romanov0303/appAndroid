@@ -286,7 +286,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 android:layout_marginBottom="16dp"
                 android:textSize="16sp"
-
+                style="?android:attr/borderlessButtonStyle"
                 />
            <!-- <LinearLayout
                 android:layout_width="match_parent"

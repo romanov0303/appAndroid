@@ -17,6 +17,7 @@
         android:orientation="horizontal"
         app:layout_constraintTop_toBottomOf="parent"/>
     <ImageView
+        android:id="@+id/removeElement"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:src="@drawable/ic_delete"
