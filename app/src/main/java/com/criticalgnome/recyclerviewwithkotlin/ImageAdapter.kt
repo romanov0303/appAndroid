@@ -17,16 +17,15 @@ class ImageAdapter(var items: MutableList<String>,var activity: MainActivity) : 
     }
 
     override fun getItemCount(): Int {
-        return items.size
+        return activity.elementsImg.size
     }
 
     override fun onBindViewHolder(p0: ImageHolder, p1: Int) {
-        var el: String = items[p1]
+        var el: String = activity.elementsImg[p1]
         p0.image.setImageURI(Uri.parse(el))
         p0.remove.setOnClickListener {
-            items.removeAt(p1)
+            activity.elementsImg.removeAt(p1)
             this.notifyDataSetChanged()
-            println(items) //TODO сделать проверку на то где находиться фото (галерея или в памяти приложения)
         }
     }
 

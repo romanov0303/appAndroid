@@ -144,7 +144,7 @@ class MainActivity : AppCompatActivity()   {
 
     override fun onSaveInstanceState(outState: Bundle?) {
         outState?.putParcelable("properties", ParcelableClass(listPropertiesParcelable))
-        outState?.putParcelable("images", ImagesParcelable(elementsImgParcelable))
+        outState?.putParcelable("images", ImagesParcelableNew(elementsImg))
         outState?.putString("plus", et.text.toString())
         outState?.putString("minus", minus.text.toString())
         super.onSaveInstanceState(outState)
@@ -152,7 +152,7 @@ class MainActivity : AppCompatActivity()   {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         val parcelableProperties: ParcelableClass = savedInstanceState!!.getParcelable("properties")
-        val parcelableImages: ImagesParcelable = savedInstanceState!!.getParcelable("images")
+        val parcelableImages: ImagesParcelableNew = savedInstanceState!!.getParcelable("images")
         val images = parcelableImages.getListParams()
         val properties = parcelableProperties.getListProperties()
 
@@ -161,10 +161,9 @@ class MainActivity : AppCompatActivity()   {
 
         et.setText(plusVal)
         minus.setText(minusVal)
-
+        println("IMAGEEE $images")
         for(i in images!!.iterator()) {
-            elementsImg.add(i.getUri())
-            elementsImgParcelable.add(ListUri(i.getUri()))
+            elementsImg.add(i)
         }
 
         var propertiesList = mutableMapOf<String, String>()
