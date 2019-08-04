@@ -4,8 +4,6 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
-import android.os.Environment
 import android.provider.MediaStore
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
@@ -19,12 +17,14 @@ import java.text.SimpleDateFormat
 import java.util.*
 import android.R.attr.data
 import android.app.Activity
+import android.app.Dialog
 import android.app.Instrumentation
 import android.content.*
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
-import android.os.Parcelable
-import android.os.PersistableBundle
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
+import android.os.*
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
@@ -81,8 +81,26 @@ class MainActivity : AppCompatActivity()   {
     }
 
     private fun retrofitGetDataFromUrl() {
+        val networkStateStable = isNetworkAvailable()
+        if (!networkStateStable) {
+            var dialogAlert = AlertDialog.Builder(this)
+            dialogAlert.setTitle("Connection Error")
+
+            dialogAlert.setMessage("Отсутствует интернет-соединение")
+            dialogAlert.setPositiveButton("Повторить"){ dialog, which ->
+                finish()
+                startActivity(getIntent())
+            }
+            dialogAlert.show()
+        }
+
+        val okHttpClient = OkHttpClient.Builder()
+                .retryOnConnectionFailure(true)
+                .build()
+
         val retrofit = Retrofit.Builder()
                 .baseUrl(BaseUrl)
+                .client(okHttpClient)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         val listCollector = mutableListOf<Collector>()
@@ -111,13 +129,20 @@ class MainActivity : AppCompatActivity()   {
                 }
             }
             override fun onFailure(call: Call<SutochnoResponse>, t: Throwable) {
-
+                println("FUUUUU ${t.message}")
             }
         })
     }
 
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE)
+        return if (connectivityManager is ConnectivityManager) {
+            val networkInfo: NetworkInfo? = connectivityManager.activeNetworkInfo
+            networkInfo?.isConnected ?: false
+        } else false
+    }
+
     override fun onSaveInstanceState(outState: Bundle?) {
-        println("IMAGEEEE $elementsImgParcelable")
         outState?.putParcelable("properties", ParcelableClass(listPropertiesParcelable))
         outState?.putParcelable("images", ImagesParcelable(elementsImgParcelable))
         outState?.putString("plus", et.text.toString())
@@ -145,7 +170,6 @@ class MainActivity : AppCompatActivity()   {
         var propertiesList = mutableMapOf<String, String>()
 
         for(i in properties!!.iterator()) {
-            println("PROOOO ${i.getGroup()} ----- ${i.getRatingVal()}")
             propertiesList.put(i.getGroup(),i.getRatingVal())
         }
 
