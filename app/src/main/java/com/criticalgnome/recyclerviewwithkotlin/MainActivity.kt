@@ -72,7 +72,8 @@ class MainActivity : AppCompatActivity()   {
 
     companion object {
         //var BaseUrl = "https://api.myjson.com/bins/grhsp/"
-        var BaseUrl = "https://api.myjson.com/bins/b2w4t/"
+        //var BaseUrl = "https://api.myjson.com/bins/b2w4t/"
+        var BaseUrl = "https://api.myjson.com/bins/tqc79/"
         private val REQUEST_TAKE_PHOTO = 0
         private val REQUEST_SELECT_IMAGE_IN_ALBUM = 1
         private val CAMERA_PERMISSION = 1000
