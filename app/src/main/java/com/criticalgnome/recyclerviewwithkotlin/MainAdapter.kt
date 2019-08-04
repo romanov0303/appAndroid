@@ -1,6 +1,7 @@
 package com.criticalgnome.recyclerviewwithkotlin
 
 import android.media.Rating
+import android.os.Parcelable
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -40,31 +41,38 @@ class MainAdapter(var items: List<MainItem>, var main: MainActivity) : RecyclerV
         holder.firstName.text = items[position].firstName
 
         holder.ratingVal.rating = round(items[position].value.toFloat())
+        main.listPropertiesParcelable.add(position, ParcelableString(holder.firstName.text.toString(), holder.ratingVal.rating.toString()))
+        rebuildAvg()
         holder.ratingVal.setOnRatingBarChangeListener { ratingBar, rating, fromUser ->
             var stars = round(rating)
             ratingBar.setRating(stars)
             datasList[position] = stars
-            var elementBlockRect = main.findViewById<ImageView>(R.id.imageView)
-            val res = datasList.all {
-                it.value != 0f
-            }
-            if (res) {
-                val count = items.size
-                var sums: Float = 0f
-                datasList.forEach {
-                    sums = sums + it.value
-                   var avgRating: Float = sums / items.size
-                    val rounded = avgRating.toBigDecimal().setScale(1, RoundingMode.UP).toDouble()
-                    main.avgRating.setBackgroundResource(R.drawable.style_rectangle)
-                    elementBlockRect.setBackgroundResource(R.drawable.style_rectangle)
-                    main.avgRating.setText("$rounded")
-                }
-            } else {
-                main.avgRating.setText("0")
-                main.avgRating.setBackgroundResource(R.drawable.style_rectangle_default)
-                elementBlockRect.setBackgroundResource(R.drawable.style_rectangle_default)
-            }
+            main.listPropertiesParcelable[position] = ParcelableString(holder.firstName.text.toString(), stars.toString())
+            rebuildAvg()
 
+        }
+    }
+
+    protected fun rebuildAvg() {
+        val res = datasList.all {
+            it.value != 0f
+        }
+        var elementBlockRect = main.findViewById<ImageView>(R.id.imageView)
+        if (res) {
+            val count = items.size
+            var sums: Float = 0f
+            datasList.forEach {
+                sums = sums + it.value
+                var avgRating: Float = sums / items.size
+                val rounded = avgRating.toBigDecimal().setScale(1, RoundingMode.UP).toDouble()
+                main.avgRating.setBackgroundResource(R.drawable.style_rectangle)
+                elementBlockRect.setBackgroundResource(R.drawable.style_rectangle)
+                main.avgRating.setText("$rounded")
+            }
+        } else {
+            main.avgRating.setText("0")
+            main.avgRating.setBackgroundResource(R.drawable.style_rectangle_default)
+            elementBlockRect.setBackgroundResource(R.drawable.style_rectangle_default)
         }
     }
 
@@ -73,5 +81,6 @@ class MainAdapter(var items: List<MainItem>, var main: MainActivity) : RecyclerV
         public val ratingVal =  itemView.findViewById<RatingBar>(R.id.ratingVal)
         public val avgRating =  itemView.findViewById<TextView>(R.id.avgRating)
     }
+
 
 }

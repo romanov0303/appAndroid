@@ -23,6 +23,8 @@ import android.app.Instrumentation
 import android.content.*
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
+import android.os.Parcelable
+import android.os.PersistableBundle
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
@@ -43,19 +45,30 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.jar.Manifest
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 
 class MainActivity : AppCompatActivity()   {
 
-    public var elementsImg = mutableListOf<Uri>()
+    public var elementsImg = mutableListOf<String>()
 
     private lateinit var pickedImage: ImageAdapter
 
     public var listData = mutableListOf<MainItem>()
 
-    public lateinit var photoURIPublic: Uri
+    public lateinit var photoURIPublic: String
 
     public lateinit var currentPhotoPath: String
+
+    public lateinit var mainAdapter: MainAdapter
+
+    public lateinit var imageAdapter: ImageAdapter
+
+    public var listProperties = mutableListOf<MainItem>()
+
+    public var elementsImgParcelable = mutableListOf<ListUri>()
+
+    public var listPropertiesParcelable = mutableListOf<ParcelableString>()
 
     companion object {
         //var BaseUrl = "https://api.myjson.com/bins/grhsp/"
@@ -103,16 +116,70 @@ class MainActivity : AppCompatActivity()   {
         })
     }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+        println("IMAGEEEE $elementsImgParcelable")
+        outState?.putParcelable("properties", ParcelableClass(listPropertiesParcelable))
+        outState?.putParcelable("images", ImagesParcelable(elementsImgParcelable))
+        outState?.putString("plus", et.text.toString())
+        outState?.putString("minus", minus.text.toString())
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        val parcelableProperties: ParcelableClass = savedInstanceState!!.getParcelable("properties")
+        val parcelableImages: ImagesParcelable = savedInstanceState!!.getParcelable("images")
+        val images = parcelableImages.getListParams()
+        val properties = parcelableProperties.getListProperties()
+
+        val plusVal: String = savedInstanceState!!.getString("plus")
+        val minusVal: String = savedInstanceState!!.getString("minus")
+
+        et.setText(plusVal)
+        minus.setText(minusVal)
+
+        for(i in images!!.iterator()) {
+            elementsImg.add(i.getUri())
+            elementsImgParcelable.add(ListUri(i.getUri()))
+        }
+
+        var propertiesList = mutableMapOf<String, String>()
+
+        for(i in properties!!.iterator()) {
+            println("PROOOO ${i.getGroup()} ----- ${i.getRatingVal()}")
+            propertiesList.put(i.getGroup(),i.getRatingVal())
+        }
+
+        var collectorDataContainer = mutableListOf<Collector>()
+
+        collectorDataContainer.add(Collector("review_ratings_order", propertiesList))
+        fillDataRecycler(collectorDataContainer)
+        super.onRestoreInstanceState(savedInstanceState)
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        val resultPermision = checkPersmission(android.Manifest.permission.INTERNET)
-        if (!resultPermision) {
-            requestPermission(android.Manifest.permission.INTERNET, 1003)
+        if (savedInstanceState != null) {
+            setContentView(R.layout.activity_main)
+            layoutProgress.visibility = View.GONE
+            mainView.visibility = View.VISIBLE
+            var param1 = savedInstanceState?.get("TestInstance")
+            println("fucker222 $param1")
+            println("fucker333")
         } else {
-            retrofitGetDataFromUrl()
+            setContentView(R.layout.activity_main)
+            val resultPermision = checkPersmission(android.Manifest.permission.INTERNET)
+            if (!resultPermision) {
+                requestPermission(android.Manifest.permission.INTERNET, 1003)
+            } else {
+                retrofitGetDataFromUrl()
+            }
         }
+
     }
 
     private fun getDataFromUrl(string: String) {
@@ -123,7 +190,6 @@ class MainActivity : AppCompatActivity()   {
     Заполнить шаблоны данными
      */
     private fun fillDataRecycler(list: MutableList<Collector>) {
-        val listProperties = mutableListOf<MainItem>()
 
         for (i in list) {
             if (i.groupName == "review_ratings_order") {
@@ -138,13 +204,14 @@ class MainActivity : AppCompatActivity()   {
         buttonAddPhoto.setOnClickListener {
             showDialog()
         }
-        val myAdapter = MainAdapter(listProperties, this)
 
-        val imgAdapter = ImageAdapter(elementsImg,this)
+        mainAdapter = MainAdapter(listProperties, this)
 
-        myRecycler.adapter = myAdapter
+        imageAdapter = ImageAdapter(elementsImg,this)
 
-        recycleImg.adapter = imgAdapter
+        myRecycler.adapter = mainAdapter
+
+        recycleImg.adapter = imageAdapter
 
         mainView.visibility = View.VISIBLE
     }
@@ -238,7 +305,7 @@ class MainActivity : AppCompatActivity()   {
                         it
                 )
                 intentCamera.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, photoURI)
-                photoURIPublic = photoURI
+                photoURIPublic = photoURI.toString()
             }
             startActivityForResult(intentCamera, REQUEST_TAKE_PHOTO)
         }

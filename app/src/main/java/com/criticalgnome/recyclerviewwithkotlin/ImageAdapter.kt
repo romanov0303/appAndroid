@@ -10,7 +10,7 @@ import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
 
-class ImageAdapter(var items: MutableList<Uri>,var activity: MainActivity) : RecyclerView.Adapter<ImageAdapter.ImageHolder>() {
+class ImageAdapter(var items: MutableList<String>,var activity: MainActivity) : RecyclerView.Adapter<ImageAdapter.ImageHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) : ImageHolder {
         return ImageHolder(LayoutInflater.from(parent.context).inflate(R.layout.image_recycler, parent, false))
@@ -21,8 +21,8 @@ class ImageAdapter(var items: MutableList<Uri>,var activity: MainActivity) : Rec
     }
 
     override fun onBindViewHolder(p0: ImageHolder, p1: Int) {
-        var el: Uri = items[p1]
-        p0.image.setImageURI(el)
+        var el: String = items[p1]
+        p0.image.setImageURI(Uri.parse(el))
         p0.remove.setOnClickListener {
             items.removeAt(p1)
             this.notifyDataSetChanged()

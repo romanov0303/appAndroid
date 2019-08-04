@@ -13,6 +13,7 @@ class ActivityResultsClass {
                 println(resultCode)
                 if (resultCode == Activity.RESULT_OK) {
                     mainClass.elementsImg.add(mainClass.elementsImg.lastIndex + 1, mainClass.photoURIPublic)
+                    mainClass.elementsImgParcelable.add(ListUri(mainClass.photoURIPublic))
                     var datas = data?.getExtras()
                     println(datas)
                     var imgAdapter = ImageAdapter(mainClass.elementsImg,mainClass)
@@ -28,7 +29,8 @@ class ActivityResultsClass {
                     val cursor = mainClass.contentResolver.query(pickedImage, filePath, null, null, null)
                     cursor!!.moveToFirst()
                     val imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]))
-                    mainClass.elementsImg.add(mainClass.elementsImg.lastIndex + 1, pickedImage!!)
+                    mainClass.elementsImg.add(mainClass.elementsImg.lastIndex + 1, pickedImage!!.toString())
+                    mainClass.elementsImgParcelable.add(ListUri(pickedImage!!.toString()))
                     var imgAdapter = ImageAdapter(mainClass.elementsImg,mainClass)
                     mainClass.recycleImg.adapter = imgAdapter
                     cursor.close()
