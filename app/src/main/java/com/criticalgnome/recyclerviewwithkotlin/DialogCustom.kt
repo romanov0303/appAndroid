@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
+import android.support.v4.app.FragmentManager
 import android.support.v7.app.AppCompatActivity
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -12,6 +13,9 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
+import android.R.attr.tag
+import android.util.Log
+
 
 class MyFragment : DialogFragment() {
 
@@ -19,6 +23,17 @@ class MyFragment : DialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+    }
+
+    override fun show(manager: FragmentManager?, tag: String?) {
+        try {
+            val ft = manager!!.beginTransaction()
+            ft.add(this, tag).addToBackStack(null)
+            ft.commitAllowingStateLoss()
+        } catch (e: IllegalStateException) {
+
+        }
+
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
