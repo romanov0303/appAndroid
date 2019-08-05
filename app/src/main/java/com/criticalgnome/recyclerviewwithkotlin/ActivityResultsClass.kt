@@ -1,8 +1,11 @@
 package com.criticalgnome.recyclerviewwithkotlin
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.provider.MediaStore
+import android.support.v7.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class ActivityResultsClass {
@@ -14,10 +17,9 @@ class ActivityResultsClass {
                 if (resultCode == Activity.RESULT_OK) {
                     mainClass.elementsImg.add(mainClass.photoURIPublic)
                     var datas = data?.getExtras()
-                    println(datas)
                     var imgAdapter = ImageAdapter(mainClass.elementsImg,mainClass)
-                    println(mainClass.elementsImg)
                     mainClass.recycleImg.adapter = imgAdapter
+
                 }
             }
             1 -> {
@@ -28,6 +30,7 @@ class ActivityResultsClass {
                     val cursor = mainClass.contentResolver.query(pickedImage, filePath, null, null, null)
                     cursor!!.moveToFirst()
                     val imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]))
+
                     mainClass.elementsImg.add(pickedImage!!.toString())
                     var imgAdapter = ImageAdapter(mainClass.elementsImg,mainClass)
                     mainClass.recycleImg.adapter = imgAdapter

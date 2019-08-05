@@ -1,6 +1,7 @@
 package com.criticalgnome.recyclerviewwithkotlin
 
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
@@ -14,6 +15,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.view.KeyEvent
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -114,7 +116,7 @@ class MainActivity : AppCompatActivity()   {
                 }
                 override fun onFailure(call: Call<SutochnoResponse>, t: Throwable) {
                     myDialog = MyFragment()
-                    myDialog!!.show(supportFragmentManager, "fragment_dialog")
+                    myDialog?.show(supportFragmentManager, "fragment_dialog")
                 }
             })
         }
@@ -129,8 +131,16 @@ class MainActivity : AppCompatActivity()   {
         } else false
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
+    override fun onBackPressed() {
+        println("BAAAAAAA")
+        super.onBackPressed()
+        finish()
+    }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+        if (layoutProgress.visibility == View.VISIBLE) {
+            outState?.putInt("progressLoad", 1)
+        }
         outState?.putParcelable("properties", ParcelableClass(listPropertiesParcelable))
         outState?.putParcelable("images", ImagesParcelableNew(elementsImg))
         outState?.putString("plus", et.text.toString())
@@ -140,9 +150,13 @@ class MainActivity : AppCompatActivity()   {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         var fragment = getSupportFragmentManager().findFragmentByTag("fragment_dialog")
+        var progress = savedInstanceState!!.getInt("progressLoad")
+
         if (fragment != null) {
             mainView.visibility = View.GONE
             layoutProgress.visibility = View.VISIBLE
+        } else if (fragment == null && progress == 1){
+            retrofitGetDataFromUrl()
         } else {
             val parcelableProperties: ParcelableClass = savedInstanceState!!.getParcelable("properties")
             val parcelableImages: ImagesParcelableNew = savedInstanceState!!.getParcelable("images")
@@ -156,7 +170,7 @@ class MainActivity : AppCompatActivity()   {
             minus.setText(minusVal)
             println("IMAGEEE $images")
             for(i in images!!.iterator()) {
-                elementsImg.add(i)
+                elementsImg.add(i)  
             }
 
             var propertiesList = mutableMapOf<String, String>()
@@ -171,7 +185,11 @@ class MainActivity : AppCompatActivity()   {
             fillDataRecycler(collectorDataContainer)
             super.onRestoreInstanceState(savedInstanceState)
         }
+        /*if (progress == 1) {
+            retrofitGetDataFromUrl()
+        } else {
 
+        }*/
     }
 
     override fun onDestroy() {
@@ -197,6 +215,10 @@ class MainActivity : AppCompatActivity()   {
             }
         }
 
+        closeApp.setOnClickListener {
+            finish()
+        }
+
     }
 
     private fun getDataFromUrl(string: String) {
@@ -219,7 +241,9 @@ class MainActivity : AppCompatActivity()   {
         val buttonAddPhoto = findViewById<TextView>(R.id.addPhotoBtn)
 
         buttonAddPhoto.setOnClickListener {
-            showDialog()
+            if(checkSize(elementsImg)) {
+                showDialog()
+            }
         }
 
         mainAdapter = MainAdapter(listProperties, this)
@@ -231,6 +255,19 @@ class MainActivity : AppCompatActivity()   {
         recycleImg.adapter = imageAdapter
 
         mainView.visibility = View.VISIBLE
+    }
+
+    private fun checkSize(items: MutableList<String>): Boolean{
+        if (items.size > 2) {
+            var dialog = android.app.AlertDialog.Builder(this)
+            dialog.setMessage("Лимит фото")
+                    .setPositiveButton("Ну ок", DialogInterface.OnClickListener { dialog, which ->
+                        false
+                    })
+            dialog.show()
+            return false
+        }
+        return true
     }
 
     /*

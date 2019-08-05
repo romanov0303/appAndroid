@@ -1,5 +1,7 @@
 package com.criticalgnome.recyclerviewwithkotlin
 
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.media.Image
 import android.net.Uri
 import android.support.v7.widget.RecyclerView
