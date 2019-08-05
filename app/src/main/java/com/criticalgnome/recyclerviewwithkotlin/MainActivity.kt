@@ -1,79 +1,67 @@
 package com.criticalgnome.recyclerviewwithkotlin
 
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.drawable.BitmapDrawable
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import android.net.Uri
-import android.support.v7.app.AppCompatActivity
+import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
-import android.view.Window
-import kotlinx.android.synthetic.main.activity_main.*
-import java.io.File
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.*
-import android.R.attr.data
-import android.app.Activity
-import android.app.Dialog
-import android.app.Instrumentation
-import android.content.*
-import android.graphics.BitmapFactory
-import android.graphics.Bitmap
-import android.net.ConnectivityManager
-import android.net.NetworkInfo
-import android.os.*
+import android.support.v7.app.AppCompatActivity
 import android.view.View
-import android.view.ViewGroup
-import android.view.animation.Animation
-import android.view.animation.AnimationSet
-import android.view.animation.AnimationUtils
-import android.widget.*
+import android.widget.TextView
+import android.widget.Toast
+import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.io.FileOutputStream
-import java.io.OutputStream
-import java.net.SocketTimeoutException
-import java.net.URI
+import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
-import java.util.jar.Manifest
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 
 class MainActivity : AppCompatActivity()   {
 
-    public var elementsImg = mutableListOf<String>()
+    var elementsImg = mutableListOf<String>()
 
     private lateinit var pickedImage: ImageAdapter
 
-    public var listData = mutableListOf<MainItem>()
+    var listData = mutableListOf<MainItem>()
 
-    public lateinit var photoURIPublic: String
+    lateinit var photoURIPublic: String
 
-    public lateinit var currentPhotoPath: String
+    lateinit var currentPhotoPath: String
 
-    public lateinit var mainAdapter: MainAdapter
+    lateinit var mainAdapter: MainAdapter
 
-    public lateinit var imageAdapter: ImageAdapter
+    lateinit var imageAdapter: ImageAdapter
 
-    public var listProperties = mutableListOf<MainItem>()
+    var listProperties = mutableListOf<MainItem>()
 
-    public var elementsImgParcelable = mutableListOf<ListUri>()
+    var elementsImgParcelable = mutableListOf<ListUri>()
 
-    public var listPropertiesParcelable = mutableListOf<ParcelableString>()
+    var listPropertiesParcelable = mutableListOf<ParcelableString>()
+
+    var myDialog: MyFragment? = null
+
+    var showDialog: Int? = 1
 
     companion object {
         //var BaseUrl = "https://api.myjson.com/bins/grhsp/"
         //var BaseUrl = "https://api.myjson.com/bins/b2w4t/"
-        var BaseUrl = "https://api.myjson.com/bins/tqc79/"
+        //var BaseUrl = "https://api.myjson.com/bins/tqc79/"
+        var BaseUrl = "http://10.0.2.2:3000/answer/"
         private val REQUEST_TAKE_PHOTO = 0
         private val REQUEST_SELECT_IMAGE_IN_ALBUM = 1
         private val CAMERA_PERMISSION = 1000
@@ -81,58 +69,56 @@ class MainActivity : AppCompatActivity()   {
         private val INTERNER_PERMISSION = 1003
     }
 
-    private fun retrofitGetDataFromUrl() {
+    fun retrofitGetDataFromUrl() {
+        layoutProgress.visibility = View.VISIBLE
+        mainView.visibility = View.GONE
         val networkStateStable = isNetworkAvailable()
         if (!networkStateStable) {
-            var dialogAlert = AlertDialog.Builder(this)
-            dialogAlert.setTitle("Connection Error")
+            myDialog = MyFragment()
+            myDialog!!.show(supportFragmentManager, "fragment_dialog")
+        } else {
+            val okHttpClient = OkHttpClient.Builder()
+                    .retryOnConnectionFailure(true)
+                    .readTimeout(5000,TimeUnit.MILLISECONDS)
+                    .build()
 
-            dialogAlert.setMessage("Отсутствует интернет-соединение")
-            dialogAlert.setPositiveButton("Повторить"){ dialog, which ->
-                finish()
-                startActivity(getIntent())
-            }
-            dialogAlert.show()
+            val retrofit = Retrofit.Builder()
+                    .baseUrl(BaseUrl)
+                    .client(okHttpClient)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+            val listCollector = mutableListOf<Collector>()
+
+            val service = retrofit.create(SutochnoService::class.java)
+            val call = service.getData()
+            call.enqueue(object : Callback<SutochnoResponse> {
+                override fun onResponse(call: Call<SutochnoResponse>, response: Response<SutochnoResponse>) {
+                    if (response.code() == 200) {
+                        val data = response.body()!!
+                        var superNewData = mutableListOf<Collector>()
+                        for ((index, value) in data.data!!.review!!.properties!!.withIndex()) {
+                            var dataNewList = mutableListOf<Collector>()
+                            var groupName = value.groupName
+                            //var properties = mutableListOf<Ratings>()
+                            var properties = mutableMapOf<String, String>()
+                            for ((i,v) in value.items!!.withIndex()) {
+                                properties.put(v.title, v.value)
+                                //properties.add(Ratings(v.title, v.value))
+                            }
+                            superNewData.add(Collector(groupName, properties))
+                        }
+                        layoutProgress.visibility = View.GONE
+
+                        fillDataRecycler(superNewData)
+                    }
+                }
+                override fun onFailure(call: Call<SutochnoResponse>, t: Throwable) {
+                    myDialog = MyFragment()
+                    myDialog!!.show(supportFragmentManager, "fragment_dialog")
+                }
+            })
         }
 
-        val okHttpClient = OkHttpClient.Builder()
-                .retryOnConnectionFailure(true)
-                .build()
-
-        val retrofit = Retrofit.Builder()
-                .baseUrl(BaseUrl)
-                .client(okHttpClient)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-        val listCollector = mutableListOf<Collector>()
-
-        val service = retrofit.create(SutochnoService::class.java)
-        val call = service.getData()
-        call.enqueue(object : Callback<SutochnoResponse> {
-            override fun onResponse(call: Call<SutochnoResponse>, response: Response<SutochnoResponse>) {
-                if (response.code() == 200) {
-                    val data = response.body()!!
-                    var superNewData = mutableListOf<Collector>()
-                    for ((index, value) in data.data!!.review!!.properties!!.withIndex()) {
-                        var dataNewList = mutableListOf<Collector>()
-                        var groupName = value.groupName
-                        //var properties = mutableListOf<Ratings>()
-                        var properties = mutableMapOf<String, String>()
-                        for ((i,v) in value.items!!.withIndex()) {
-                            properties.put(v.title, v.value)
-                            //properties.add(Ratings(v.title, v.value))
-                        }
-                        superNewData.add(Collector(groupName, properties))
-                    }
-                    layoutProgress.visibility = View.GONE
-
-                    fillDataRecycler(superNewData)
-                }
-            }
-            override fun onFailure(call: Call<SutochnoResponse>, t: Throwable) {
-                println("FUUUUU ${t.message}")
-            }
-        })
     }
 
     private fun isNetworkAvailable(): Boolean {
@@ -144,6 +130,7 @@ class MainActivity : AppCompatActivity()   {
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
+
         outState?.putParcelable("properties", ParcelableClass(listPropertiesParcelable))
         outState?.putParcelable("images", ImagesParcelableNew(elementsImg))
         outState?.putString("plus", et.text.toString())
@@ -152,32 +139,38 @@ class MainActivity : AppCompatActivity()   {
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
-        val parcelableProperties: ParcelableClass = savedInstanceState!!.getParcelable("properties")
-        val parcelableImages: ImagesParcelableNew = savedInstanceState!!.getParcelable("images")
-        val images = parcelableImages.getListParams()
-        val properties = parcelableProperties.getListProperties()
+        var fragment = getSupportFragmentManager().findFragmentByTag("fragment_dialog")
+        if (fragment != null) {
+            mainView.visibility = View.GONE
+            layoutProgress.visibility = View.VISIBLE
+        } else {
+            val parcelableProperties: ParcelableClass = savedInstanceState!!.getParcelable("properties")
+            val parcelableImages: ImagesParcelableNew = savedInstanceState!!.getParcelable("images")
+            val images = parcelableImages.getListParams()
+            val properties = parcelableProperties.getListProperties()
 
-        val plusVal: String = savedInstanceState!!.getString("plus")
-        val minusVal: String = savedInstanceState!!.getString("minus")
+            val plusVal: String = savedInstanceState!!.getString("plus")
+            val minusVal: String = savedInstanceState!!.getString("minus")
 
-        et.setText(plusVal)
-        minus.setText(minusVal)
-        println("IMAGEEE $images")
-        for(i in images!!.iterator()) {
-            elementsImg.add(i)
+            et.setText(plusVal)
+            minus.setText(minusVal)
+            println("IMAGEEE $images")
+            for(i in images!!.iterator()) {
+                elementsImg.add(i)
+            }
+
+            var propertiesList = mutableMapOf<String, String>()
+
+            for(i in properties!!.iterator()) {
+                propertiesList.put(i.getGroup(),i.getRatingVal())
+            }
+
+            var collectorDataContainer = mutableListOf<Collector>()
+
+            collectorDataContainer.add(Collector("review_ratings_order", propertiesList))
+            fillDataRecycler(collectorDataContainer)
+            super.onRestoreInstanceState(savedInstanceState)
         }
-
-        var propertiesList = mutableMapOf<String, String>()
-
-        for(i in properties!!.iterator()) {
-            propertiesList.put(i.getGroup(),i.getRatingVal())
-        }
-
-        var collectorDataContainer = mutableListOf<Collector>()
-
-        collectorDataContainer.add(Collector("review_ratings_order", propertiesList))
-        fillDataRecycler(collectorDataContainer)
-        super.onRestoreInstanceState(savedInstanceState)
 
     }
 
