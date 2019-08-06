@@ -16,11 +16,28 @@ import java.util.concurrent.TimeUnit
 data class InfoSutochno(val status: String, val data: SutochnoResponse? = null)
 
 class ObservableTest: Application() {
+
+    lateinit var consumerMan: MainActivity
+
+    public var connection: Int? = 0
+
     override fun onCreate() {
- /*       var obs: Observable = Observable()
-        obs.addObserver(MainActivity())*/
-        var observerTest = ObserverInit()
-        observerTest.addObserver(MainActivity())
+        super.onCreate()
+    }
+
+    public fun setConsumer(consumer: MainActivity) {
+        this.consumerMan = consumer
+    }
+
+    private fun sendCallBackToConsumer(response: InfoSutochno) {
+        this.consumerMan.getCallBack(response)
+    }
+
+    public fun getConnectionStatus(): Int? {
+        return this.connection
+    }
+
+    public fun sendRequest() {
         val okHttpClient = OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
                 .readTimeout(5000, TimeUnit.MILLISECONDS)
@@ -35,18 +52,21 @@ class ObservableTest: Application() {
 
         val service = retrofit.create(SutochnoService::class.java)
         val call = service.getData()
+        connection = 1
         call.enqueue(object : Callback<SutochnoResponse> {
             override fun onResponse(call: Call<SutochnoResponse>, response: Response<SutochnoResponse>) {
                 response.body()
+                connection = 0
+                println("FIRSTSSSS34")
                 var result = InfoSutochno("success", response.body())
-                observerTest.notifyObservers(result)
+                sendCallBackToConsumer(result)
+               // observerTest.notifyObservers(result)
             }
             override fun onFailure(call: Call<SutochnoResponse>, t: Throwable) {
-                observerTest.notifyObservers(InfoSutochno("error"))
+                connection = 0
+                sendCallBackToConsumer(InfoSutochno("error"))
+               // observerTest.notifyObservers()
             }
         })
-
-
-        super.onCreate()
     }
 }

@@ -1,6 +1,7 @@
 package com.criticalgnome.recyclerviewwithkotlin
 
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -38,7 +39,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-class MainActivity : AppCompatActivity(), Observer   {
+class MainActivity : AppCompatActivity()   {
 
     var elementsImg = mutableListOf<String>()
 
@@ -78,35 +79,11 @@ class MainActivity : AppCompatActivity(), Observer   {
         private val INTERNER_PERMISSION = 1003
     }
 
-    override fun update(o: Observable?, arg: Any?) {
-        if (arg is InfoSutochno) {
-            if (arg.status == "success") {
-                if (arg.data is SutochnoResponse) {
-                    val data = arg.data!!
-                    var superNewData = mutableListOf<Collector>()
-                    for ((index, value) in data.data!!.review!!.properties!!.withIndex()) {
-                        var dataNewList = mutableListOf<Collector>()
-                        var groupName = value.groupName
-                        //var properties = mutableListOf<Ratings>()
-                        var properties = mutableMapOf<String, String>()
-                        for ((i,v) in value.items!!.withIndex()) {
-                            properties.put(v.title, "0")
-                            onlyProperties?.add(v.key)
-                            //properties.add(Ratings(v.title, v.value))
-                        }
-                        superNewData.add(Collector(groupName, properties))
-                    }
+    /*override fun update(o: Observable?, arg: Any?) {
+        println("FIRSTSSSS5555")
 
-                    layoutProgress.visibility = View.GONE
+    }*/
 
-                    fillDataRecycler(superNewData)
-                }
-            } else {
-                myDialog = MyFragment()
-                myDialog?.show(supportFragmentManager, "fragment_dialog")
-            }
-        }
-    }
     fun retrofitGetDataFromUrl() {
         layoutProgress.visibility = View.VISIBLE
         mainView.visibility = View.GONE
@@ -115,7 +92,13 @@ class MainActivity : AppCompatActivity(), Observer   {
             myDialog = MyFragment()
             myDialog!!.show(supportFragmentManager, "fragment_dialog")
         } else {
-
+            var app = application
+            if (app is ObservableTest) {
+                app.setConsumer(this)
+                if (app.getConnectionStatus() == 0) {
+                    app.sendRequest()
+                }
+            }
         }
 
     }
@@ -203,6 +186,36 @@ class MainActivity : AppCompatActivity(), Observer   {
         super.onDestroy()
     }
 
+    public fun getCallBack(arg: InfoSutochno) {
+        println("TEST")
+        if (arg is InfoSutochno) {
+            if (arg.status == "success") {
+                if (arg.data is SutochnoResponse) {
+                    val data = arg.data!!
+                    var superNewData = mutableListOf<Collector>()
+                    for ((index, value) in data.data!!.review!!.properties!!.withIndex()) {
+                        var dataNewList = mutableListOf<Collector>()
+                        var groupName = value.groupName
+                        //var properties = mutableListOf<Ratings>()
+                        var properties = mutableMapOf<String, String>()
+                        for ((i,v) in value.items!!.withIndex()) {
+                            properties.put(v.title, "0")
+                            onlyProperties?.add(v.key)
+                            //properties.add(Ratings(v.title, v.value))
+                        }
+                        superNewData.add(Collector(groupName, properties))
+                    }
+
+                    layoutProgress.visibility = View.GONE
+                    fillDataRecycler(superNewData)
+                }
+            } else {
+                myDialog = MyFragment()
+                myDialog?.show(supportFragmentManager, "fragment_dialog")
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState != null) {
@@ -213,11 +226,9 @@ class MainActivity : AppCompatActivity(), Observer   {
         } else {
             setContentView(R.layout.activity_main)
             val resultPermision = checkPersmission(android.Manifest.permission.INTERNET)
-            if (!resultPermision) {
-                requestPermission(android.Manifest.permission.INTERNET, 1003)
-            } else {
-                retrofitGetDataFromUrl()
-            }
+
+            retrofitGetDataFromUrl()
+
         }
 
         lineChart =  findViewById(R.id.layoutProgress)
