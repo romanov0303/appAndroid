@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity()   {
                             //var properties = mutableListOf<Ratings>()
                             var properties = mutableMapOf<String, String>()
                             for ((i,v) in value.items!!.withIndex()) {
-                                properties.put(v.title, v.value)
+                                properties.put(v.title, "0")
                                 onlyProperties?.add(v.key)
                                 //properties.add(Ratings(v.title, v.value))
                             }
@@ -163,13 +163,12 @@ class MainActivity : AppCompatActivity()   {
         var added = false
         var visibleFragment = false
         if (fragment != null) {
-            visibleFragment = fragment.userVisibleHint
             added = fragment.isAdded
         }
         if (fragment != null && (added)) {
             mainView.visibility = View.GONE
             layoutProgress.visibility = View.VISIBLE
-        } else if (fragment == null && progress == 1){
+        } else if ((fragment == null || !added) && progress == 1){
             retrofitGetDataFromUrl()
         } else {
             val parcelableProperties: ParcelableClass = savedInstanceState!!.getParcelable("properties")
