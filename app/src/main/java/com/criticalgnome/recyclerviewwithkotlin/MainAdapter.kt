@@ -39,16 +39,25 @@ class MainAdapter(var items: List<MainItem>, var main: MainActivity) : RecyclerV
         }
 
         holder.firstName.text = items[position].firstName
-
-        holder.ratingVal.rating = round(items[position].value.toFloat())
+        if (items[position].value.toFloat() > 5) {
+            holder.ratingVal.rating = 5.0f
+        } else {
+            holder.ratingVal.rating = round(items[position].value.toFloat())
+        }
         main.listPropertiesParcelable.add(position, ParcelableString(holder.firstName.text.toString(), holder.ratingVal.rating.toString()))
         rebuildAvg()
         holder.ratingVal.setOnRatingBarChangeListener { ratingBar, rating, fromUser ->
             var stars = round(rating)
-            ratingBar.setRating(stars)
+            if (stars < 1) {
+                ratingBar.rating = 1.0f
+                stars = round(1.0f)
+            } else {
+                ratingBar.rating = stars
+            }
             datasList[position] = stars
             main.listPropertiesParcelable[position] = ParcelableString(holder.firstName.text.toString(), stars.toString())
             rebuildAvg()
+            main.checkForm()
 
         }
     }

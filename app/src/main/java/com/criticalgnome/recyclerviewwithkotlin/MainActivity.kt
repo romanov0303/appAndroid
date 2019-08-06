@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.Uri
@@ -15,6 +16,8 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.View
 import android.widget.TextView
@@ -59,9 +62,9 @@ class MainActivity : AppCompatActivity()   {
 
     var showDialog: Int? = 1
 
+    var onlyProperties = arrayListOf<String>()
+
     companion object {
-        //var BaseUrl = "https://api.myjson.com/bins/grhsp/"
-        //var BaseUrl = "https://api.myjson.com/bins/b2w4t/"
         //var BaseUrl = "https://api.myjson.com/bins/tqc79/"
         var BaseUrl = "http://10.0.2.2:3000/answer/"
         private val REQUEST_TAKE_PHOTO = 0
@@ -105,6 +108,7 @@ class MainActivity : AppCompatActivity()   {
                             var properties = mutableMapOf<String, String>()
                             for ((i,v) in value.items!!.withIndex()) {
                                 properties.put(v.title, v.value)
+                                onlyProperties?.add(v.key)
                                 //properties.add(Ratings(v.title, v.value))
                             }
                             superNewData.add(Collector(groupName, properties))
@@ -141,6 +145,7 @@ class MainActivity : AppCompatActivity()   {
         if (layoutProgress.visibility == View.VISIBLE) {
             outState?.putInt("progressLoad", 1)
         }
+        outState?.putStringArrayList("onlyProperties", onlyProperties)
         outState?.putParcelable("properties", ParcelableClass(listPropertiesParcelable))
         outState?.putParcelable("images", ImagesParcelableNew(elementsImg))
         outState?.putString("plus", et.text.toString())
@@ -149,10 +154,19 @@ class MainActivity : AppCompatActivity()   {
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        var prop = savedInstanceState!!.getStringArrayList("onlyProperties")
+        if (prop != null) {
+            onlyProperties = prop
+        }
         var fragment = getSupportFragmentManager().findFragmentByTag("fragment_dialog")
         var progress = savedInstanceState!!.getInt("progressLoad")
-
+        var added = false
+        var visibleFragment = false
         if (fragment != null) {
+            visibleFragment = fragment.userVisibleHint
+            added = fragment.isAdded
+        }
+        if (fragment != null && (added)) {
             mainView.visibility = View.GONE
             layoutProgress.visibility = View.VISIBLE
         } else if (fragment == null && progress == 1){
@@ -168,7 +182,7 @@ class MainActivity : AppCompatActivity()   {
 
             et.setText(plusVal)
             minus.setText(minusVal)
-            println("IMAGEEE $images")
+
             for(i in images!!.iterator()) {
                 elementsImg.add(i)  
             }
@@ -183,6 +197,7 @@ class MainActivity : AppCompatActivity()   {
 
             collectorDataContainer.add(Collector("review_ratings_order", propertiesList))
             fillDataRecycler(collectorDataContainer)
+            //checkForm()
             super.onRestoreInstanceState(savedInstanceState)
         }
         /*if (progress == 1) {
@@ -203,8 +218,6 @@ class MainActivity : AppCompatActivity()   {
             layoutProgress.visibility = View.GONE
             mainView.visibility = View.VISIBLE
             var param1 = savedInstanceState?.get("TestInstance")
-            println("fucker222 $param1")
-            println("fucker333")
         } else {
             setContentView(R.layout.activity_main)
             val resultPermision = checkPersmission(android.Manifest.permission.INTERNET)
@@ -214,11 +227,75 @@ class MainActivity : AppCompatActivity()   {
                 retrofitGetDataFromUrl()
             }
         }
+        addReview.isEnabled = false
+        et.addTextChangedListener(object: TextWatcher {
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+                checkForm()
+            }
 
+            override fun afterTextChanged(p0: Editable?) {
+
+            }
+
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+        })
+
+        addReview.setOnClickListener {
+            var alert = AlertDialog.Builder(this)
+            alert.setMessage("Отзыв оставлен")
+                .setPositiveButton("Хорошо", DialogInterface.OnClickListener { dialog, which ->
+                    true
+                })
+            alert.show()
+        }
+        minus.setOnClickListener{
+            checkForm()
+        }
+
+        mainView.setOnClickListener {
+            println("TOOOOOOOU")
+            true
+        }
         closeApp.setOnClickListener {
             finish()
         }
 
+    }
+
+    public fun checkForm(): Boolean {
+        var result = true
+        var avgRating = avgRating.text.toString()
+        var textPro = et.text
+        var textContra = minus.text
+
+        if (et.visibility == View.VISIBLE && textPro.isNullOrEmpty()) {
+            return false
+        }
+
+        if (minus.visibility == View.VISIBLE && textContra.isNullOrEmpty()) {
+            return false
+        }
+
+        if (avgRating.toFloat() < 1) {
+            return false
+        }
+        return result
+
+    }
+
+    override fun onUserInteraction() {
+        var result = checkForm()
+        if (result) {
+            addReview.isEnabled = true
+            addReview.setBackgroundColor(Color.parseColor("#5386C1"))
+            addReview.setTextColor(Color.parseColor("#FFFFFF"))
+        } else {
+            addReview.setBackgroundColor(Color.parseColor("#EDECEB"))
+            addReview.setTextColor(Color.parseColor("#999999"))
+        }
+        super.onUserInteraction()
     }
 
     private fun getDataFromUrl(string: String) {
@@ -229,14 +306,22 @@ class MainActivity : AppCompatActivity()   {
     Заполнить шаблоны данными
      */
     private fun fillDataRecycler(list: MutableList<Collector>) {
-
         for (i in list) {
-            if (i.groupName == "review_ratings_order") {
-                for (property in i.items) {
+            for (property in i.items) {
+                if (i.groupName == "review_ratings_order") {
                     listProperties.add(MainItem(property.key, property.value))
                 }
             }
+
         }
+        if ("pro" !in onlyProperties) {
+            props.visibility = View.GONE
+        }
+
+        if ("fault" !in onlyProperties) {
+            contra.visibility = View.GONE
+        }
+
 
         val buttonAddPhoto = findViewById<TextView>(R.id.addPhotoBtn)
 
