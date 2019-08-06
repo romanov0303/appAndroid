@@ -1,5 +1,6 @@
 package com.criticalgnome.recyclerviewwithkotlin
 
+import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -20,6 +21,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.View
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
@@ -36,7 +38,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-class MainActivity : AppCompatActivity()   {
+class MainActivity : AppCompatActivity(), Observer   {
 
     var elementsImg = mutableListOf<String>()
 
@@ -64,6 +66,8 @@ class MainActivity : AppCompatActivity()   {
 
     var onlyProperties = arrayListOf<String>()
 
+    lateinit var lineChart: Any
+
     companion object {
         //var BaseUrl = "https://api.myjson.com/bins/tqc79/"
         var BaseUrl = "http://10.0.2.2:3000/answer/"
@@ -74,6 +78,35 @@ class MainActivity : AppCompatActivity()   {
         private val INTERNER_PERMISSION = 1003
     }
 
+    override fun update(o: Observable?, arg: Any?) {
+        if (arg is InfoSutochno) {
+            if (arg.status == "success") {
+                if (arg.data is SutochnoResponse) {
+                    val data = arg.data!!
+                    var superNewData = mutableListOf<Collector>()
+                    for ((index, value) in data.data!!.review!!.properties!!.withIndex()) {
+                        var dataNewList = mutableListOf<Collector>()
+                        var groupName = value.groupName
+                        //var properties = mutableListOf<Ratings>()
+                        var properties = mutableMapOf<String, String>()
+                        for ((i,v) in value.items!!.withIndex()) {
+                            properties.put(v.title, "0")
+                            onlyProperties?.add(v.key)
+                            //properties.add(Ratings(v.title, v.value))
+                        }
+                        superNewData.add(Collector(groupName, properties))
+                    }
+
+                    layoutProgress.visibility = View.GONE
+
+                    fillDataRecycler(superNewData)
+                }
+            } else {
+                myDialog = MyFragment()
+                myDialog?.show(supportFragmentManager, "fragment_dialog")
+            }
+        }
+    }
     fun retrofitGetDataFromUrl() {
         layoutProgress.visibility = View.VISIBLE
         mainView.visibility = View.GONE
@@ -82,47 +115,7 @@ class MainActivity : AppCompatActivity()   {
             myDialog = MyFragment()
             myDialog!!.show(supportFragmentManager, "fragment_dialog")
         } else {
-            val okHttpClient = OkHttpClient.Builder()
-                    .retryOnConnectionFailure(true)
-                    .readTimeout(5000,TimeUnit.MILLISECONDS)
-                    .build()
 
-            val retrofit = Retrofit.Builder()
-                    .baseUrl(BaseUrl)
-                    .client(okHttpClient)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-            val listCollector = mutableListOf<Collector>()
-
-            val service = retrofit.create(SutochnoService::class.java)
-            val call = service.getData()
-            call.enqueue(object : Callback<SutochnoResponse> {
-                override fun onResponse(call: Call<SutochnoResponse>, response: Response<SutochnoResponse>) {
-                    if (response.code() == 200) {
-                        val data = response.body()!!
-                        var superNewData = mutableListOf<Collector>()
-                        for ((index, value) in data.data!!.review!!.properties!!.withIndex()) {
-                            var dataNewList = mutableListOf<Collector>()
-                            var groupName = value.groupName
-                            //var properties = mutableListOf<Ratings>()
-                            var properties = mutableMapOf<String, String>()
-                            for ((i,v) in value.items!!.withIndex()) {
-                                properties.put(v.title, "0")
-                                onlyProperties?.add(v.key)
-                                //properties.add(Ratings(v.title, v.value))
-                            }
-                            superNewData.add(Collector(groupName, properties))
-                        }
-                        layoutProgress.visibility = View.GONE
-
-                        fillDataRecycler(superNewData)
-                    }
-                }
-                override fun onFailure(call: Call<SutochnoResponse>, t: Throwable) {
-                    myDialog = MyFragment()
-                    myDialog?.show(supportFragmentManager, "fragment_dialog")
-                }
-            })
         }
 
     }
@@ -226,6 +219,8 @@ class MainActivity : AppCompatActivity()   {
                 retrofitGetDataFromUrl()
             }
         }
+
+        lineChart =  findViewById(R.id.layoutProgress)
         addReview.isEnabled = false
         et.addTextChangedListener(object: TextWatcher {
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
@@ -240,7 +235,6 @@ class MainActivity : AppCompatActivity()   {
 
             }
         })
-
         addReview.setOnClickListener {
             var alert = AlertDialog.Builder(this)
             alert.setMessage("Отзыв оставлен")
